@@ -1,0 +1,54 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>Interview Prep Tracker</title>
+<style>
+/*__STYLES__*/
+</style>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">Interview Prep</div>
+    <nav id="nav-side"></nav>
+    <div class="sidefoot">
+      1 августа — 4 октября 2026<br>
+      Прогресс хранится в этом браузере.
+    </div>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+
+<nav class="bottomnav" id="nav-bottom"></nav>
+
+<button class="fab" id="fab" type="button" aria-label="Таймер">
+  <span aria-hidden="true">⏱</span><span id="fab-time">20:00</span>
+</button>
+
+<div class="tpanel" id="tpanel" hidden role="dialog" aria-label="Таймер">
+  <div class="tdisplay nums" id="t-display">20:00</div>
+  <div class="tlabel" id="t-label"></div>
+  <div class="presets" id="t-presets">
+    <button type="button" data-min="20">20</button>
+    <button type="button" data-min="40">40</button>
+    <button type="button" data-min="45">45</button>
+    <button type="button" data-min="50">50</button>
+    <button type="button" data-min="60">60</button>
+  </div>
+  <div class="tctl">
+    <button class="btn primary" type="button" id="t-toggle">Старт</button>
+    <button class="btn" type="button" id="t-reset">Сброс</button>
+  </div>
+  <div class="tcustom">
+    <input type="number" id="t-custom" min="1" max="240" placeholder="мин" aria-label="Произвольное время, минут">
+    <button class="btn" type="button" id="t-set">Задать</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+/*__DATA__*/
+</script>
+<script>
+/*__APP__*/
+</script>
