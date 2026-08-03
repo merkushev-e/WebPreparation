@@ -5,7 +5,17 @@
 
   var STORAGE_KEY = 'interview-prep-v1';
   var STATE_VERSION = 2;
-  var DEFAULT_START = PROGRAM.start || '2026-08-01';
+  var PLANNED_START = PROGRAM.start || '2026-08-01';
+
+  /**
+   * Дата старта при первом запуске. Плановая дата зашита в программу и к моменту, когда
+   * приложение реально открыли, обычно уже в прошлом — стартовать с неё значит встретить
+   * пользователя отставанием за дни, которых он не видел. Поэтому берём завтра.
+   */
+  function defaultStart() {
+    var t = todayISO();
+    return PLANNED_START > t ? PLANNED_START : isoAdd(t, 1);
+  }
 
   var TYPE_ICON = {
     question: '', practice: '🛠', timed: '⏱', speak: '🎤',
@@ -118,7 +128,7 @@
   function emptyState() {
     return {
       version: STATE_VERSION,
-      startDate: DEFAULT_START,
+      startDate: defaultStart(),
       norm: 60,        // норма дня: сколько блоков нужно закрыть, чтобы день считался пройденным
       flowMode: true,  // плавающий календарь: «Сегодня» = первый незакрытый день
       items: {},
@@ -222,6 +232,11 @@
       });
     });
     return out;
+  }
+  function closedDaysCount() {
+    var n = 0;
+    DAYS.forEach(function (e) { if (isClosed(e.day)) n++; });
+    return n;
   }
   function skippedCount() {
     var n = 0;
@@ -412,7 +427,7 @@
     h += '<span class="pill">Неделя ' + week.number + '</span>';
     h += '<span>' + esc(day.weekday) + ', ' + humanDate(dayDate(day)) + '</span>';
     var lag = isoDiff(dayDate(day), todayISO());
-    if (STATE.flowMode && lag > 0 && !isClosed(day)) {
+    if (STATE.flowMode && lag > 0 && !isClosed(day) && closedDaysCount() > 0) {
       h += '<span class="pill" style="color:var(--yellow);border-color:var(--yellow)">отставание ' +
         lag + ' ' + plural(lag, 'день', 'дня', 'дней') + '</span>';
     }
@@ -789,8 +804,9 @@
     h += '<tr><td>финиш при этом темпе</td><td class="n">' +
       (fc.finish ? humanDate(fc.finish) : '—') + '</td></tr>';
     h += '<tr><td>плановый финиш</td><td class="n">' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)) + '</td></tr>';
-    h += '<tr><td>' + (fc.lag > 0 ? 'отставание от плана' : fc.lag < 0 ? 'опережение плана' : 'отклонение от плана') +
-      '</td><td class="n">' + Math.abs(fc.lag) + ' ' + plural(Math.abs(fc.lag), 'день', 'дня', 'дней') + '</td></tr>';
+    h += '<tr><td>' + (fc.lag !== null && fc.lag < 0 ? 'опережение плана' : 'отставание от плана') +
+      '</td><td class="n">' + (fc.lag === null ? 'программа не начата'
+        : Math.abs(fc.lag) + ' ' + plural(Math.abs(fc.lag), 'день', 'дня', 'дней')) + '</td></tr>';
     h += '<tr><td>отложено на потом</td><td class="n">' + skippedCount() + ' ' +
       plural(skippedCount(), 'пункт', 'пункта', 'пунктов') + '</td></tr>';
     h += '</tbody></table></div></div>';
@@ -878,8 +894,9 @@
       out.eta = 0;
     }
     // отставание: сколько дней программы должно было быть закрыто к сегодня по плану
+    // Пока не закрыт ни один день, говорить об отставании нечестно — программа не начата.
     var planned = Math.max(0, Math.min(DAYS.length, isoDiff(STATE.startDate, t) + 1));
-    out.lag = planned - closed;
+    out.lag = closed > 0 ? planned - closed : null;
     return out;
   }
 
@@ -912,6 +929,10 @@
       '<label for="startdate">Дата старта программы</label>' +
       '<input type="date" id="startdate" value="' + STATE.startDate + '">' +
       '<button class="btn sm" type="button" data-act="startdate" style="margin-left:8px">Применить</button>' +
+      '<div class="row" style="margin-top:8px">' +
+      '<button class="btn sm" type="button" data-act="startquick" data-when="0">Начать сегодня</button>' +
+      '<button class="btn sm" type="button" data-act="startquick" data-when="1">Начать завтра</button>' +
+      '</div>' +
       '<div class="hint">Все 65 дней пересчитываются от этой даты, структура недель сохраняется. ' +
       'Сейчас программа идёт с ' + humanDate(STATE.startDate) + ' по ' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)) + '. ' +
       'Прогресс привязан к пунктам, а не к датам, и не теряется.</div>' +
@@ -1284,6 +1305,14 @@
       STATE.startDate = input.value;
       save(); render();
       toast('Даты пересчитаны: ' + humanDate(STATE.startDate) + ' — ' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)));
+    },
+
+    startquick: function (el) {
+      var when = +el.getAttribute('data-when');
+      STATE.startDate = isoAdd(todayISO(), when);
+      save(); render();
+      toast('Старт программы: ' + humanDate(STATE.startDate) +
+        ' · финиш ' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)));
     },
 
     export: function () {
