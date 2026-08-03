@@ -294,6 +294,7 @@ h1.page { font-size: 19px; margin: 0 0 4px; font-weight: 660; letter-spacing: -.
 }
 .rzitem { border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 7px; padding: 9px 11px; margin-bottom: 6px; background: var(--bg-elev); }
 .rzitem.y { border-left-color: var(--yellow); }
+.rzitem.sk { border-left-color: var(--border-str); }
 .rzitem .src { font-size: 12px; color: var(--text-faint); margin-top: 5px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .link { background: none; border: 0; padding: 0; color: var(--accent); font-size: 12px; text-decoration: underline; text-underline-offset: 2px; }
 
@@ -467,7 +468,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
   'use strict';
 
   var STORAGE_KEY = 'interview-prep-v1';
-  var STATE_VERSION = 1;
+  var STATE_VERSION = 2;
   var DEFAULT_START = PROGRAM.start || '2026-08-01';
 
   var TYPE_ICON = {
@@ -582,6 +583,8 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     return {
       version: STATE_VERSION,
       startDate: DEFAULT_START,
+      norm: 60,        // норма дня: сколько блоков нужно закрыть, чтобы день считался пройденным
+      flowMode: true,  // плавающий календарь: «Сегодня» = первый незакрытый день
       items: {},
       days: {},
       settings: { theme: 'dark' }
@@ -593,6 +596,8 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     var s = emptyState();
     if (!raw || typeof raw !== 'object') return s;
     if (typeof raw.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.startDate)) s.startDate = raw.startDate;
+    if (raw.norm === 20 || raw.norm === 60 || raw.norm === 120) s.norm = raw.norm;
+    if (typeof raw.flowMode === 'boolean') s.flowMode = raw.flowMode;
     if (raw.items && typeof raw.items === 'object') {
       Object.keys(raw.items).forEach(function (k) {
         var v = raw.items[k];
@@ -605,7 +610,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       Object.keys(raw.days).forEach(function (k) {
         var v = raw.days[k];
         if (!v || typeof v !== 'object') return;
-        var mode = (v.mode === 20 || v.mode === 60 || v.mode === 120) ? v.mode : 60;
+        var mode = (v.mode === 20 || v.mode === 60 || v.mode === 120) ? v.mode : null;
         s.days[k] = { mode: mode, completedAt: typeof v.completedAt === 'string' ? v.completedAt : null };
       });
     }
@@ -648,10 +653,48 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
   }
   function dst(id) {
     var v = STATE.days[id];
-    if (!v) { v = STATE.days[id] = { mode: 60, completedAt: null }; }
+    if (!v) { v = STATE.days[id] = { mode: null, completedAt: null }; }
     return v;
   }
   function dayDate(day) { return isoAdd(STATE.startDate, day.index); }
+
+  /** Норма конкретного дня: разовое переопределение либо глобальная норма. */
+  function dayMode(day) {
+    var v = STATE.days[day.id];
+    return (v && v.mode) ? v.mode : STATE.norm;
+  }
+  function isClosed(day) {
+    var v = STATE.days[day.id];
+    return !!(v && v.completedAt);
+  }
+  /** Норма дня выполнена — все пункты в её пределах отмечены. */
+  function normDone(day) {
+    var ids = itemIdsOfDay(day, tiersForMode(dayMode(day)));
+    if (!ids.length) return !!day.prose; // день без блоков закрывается вручную
+    return ids.every(function (id) { return st(id).done; });
+  }
+  /**
+   * Отложенные пункты: из закрытых дней, но не отмеченные. Сюда попадает блок сверх
+   * нормы и всё, что осталось при досрочном закрытии. Это витрина — пункт остаётся в дне.
+   */
+  function collectSkipped() {
+    var out = [];
+    DAYS.forEach(function (e) {
+      if (!isClosed(e.day)) return;
+      itemIdsOfDay(e.day, null).forEach(function (id) {
+        if (!st(id).done) out.push({ id: id, ref: ITEM_INDEX[id] });
+      });
+    });
+    return out;
+  }
+  function skippedCount() {
+    var n = 0;
+    DAYS.forEach(function (e) {
+      if (!isClosed(e.day)) return;
+      itemIdsOfDay(e.day, null).forEach(function (id) { if (!st(id).done) n++; });
+    });
+    return n;
+  }
 
   // ── экранное состояние ──────────────────────────────────────────────────
 
@@ -660,6 +703,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     dayId: null,
     q: '',
     topic: '*',
+    redTab: 'conf',   // 'conf' — не даётся (🔴), 'skipped' — отложено
     showYellow: false,
     random: null,
     focus: null,
@@ -781,19 +825,27 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
 
   function resolveTodayDay() {
     var t = todayISO();
+    // плавающий календарь: день не сгорает — работаем с первым незакрытым
+    if (STATE.flowMode) {
+      for (var f = 0; f < DAYS.length; f++) {
+        if (!isClosed(DAYS[f].day)) return { entry: DAYS[f], exact: dayDate(DAYS[f].day) === t };
+      }
+      return { entry: DAYS[DAYS.length - 1], exact: false, allDone: true };
+    }
     for (var i = 0; i < DAYS.length; i++) {
       if (dayDate(DAYS[i].day) === t) return { entry: DAYS[i], exact: true };
     }
     // вне программы — ближайший незавершённый
     for (var j = 0; j < DAYS.length; j++) {
-      var d = DAYS[j].day;
-      if (!(STATE.days[d.id] && STATE.days[d.id].completedAt)) return { entry: DAYS[j], exact: false };
+      if (!isClosed(DAYS[j].day)) return { entry: DAYS[j], exact: false };
     }
-    return { entry: DAYS[DAYS.length - 1], exact: false };
+    return { entry: DAYS[DAYS.length - 1], exact: false, allDone: true };
   }
 
   function currentDayEntry() {
-    if (V.dayId && DAY_BY_ID[V.dayId]) return { entry: DAY_BY_ID[V.dayId], exact: dayDate(DAY_BY_ID[V.dayId].day) === todayISO() };
+    if (V.dayId && DAY_BY_ID[V.dayId]) {
+      return { entry: DAY_BY_ID[V.dayId], exact: dayDate(DAY_BY_ID[V.dayId].day) === todayISO(), pinned: true };
+    }
     return resolveTodayDay();
   }
 
@@ -801,14 +853,17 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     var r = currentDayEntry();
     var week = r.entry.week, day = r.entry.day;
     var ds = dst(day.id);
-    var mode = ds.mode;
+    var mode = dayMode(day);
     var idx = DAYS.indexOf(r.entry);
     var h = '';
 
-    if (!r.exact) {
+    if (r.allDone) {
+      h += '<div class="card tight small warn muted">Все 65 дней закрыты. Дальше — «Красная зона» и «Отложено».</div>';
+    } else if (!r.exact && !r.pinned) {
       var t = todayISO(), first = dayDate(DAYS[0].day), last = dayDate(DAYS[DAYS.length - 1].day);
       var msg;
-      if (t < first) msg = 'Программа стартует ' + humanDate(first) + '. Пока показан ближайший незавершённый день — можно начать раньше или сдвинуть старт в настройках.';
+      if (STATE.flowMode) msg = 'Плавающий календарь: показан первый незакрытый день программы. Ничего не сгорает.';
+      else if (t < first) msg = 'Программа стартует ' + humanDate(first) + '. Пока показан ближайший незавершённый день — можно начать раньше или сдвинуть старт в настройках.';
       else if (t > last) msg = 'Программа закончилась ' + humanDate(last) + '. Показан ближайший незавершённый день.';
       else msg = 'Сегодня — ' + humanDate(t) + '. Показан ближайший незавершённый день.';
       h += '<div class="card tight small warn muted">' + esc(msg) + '</div>';
@@ -820,6 +875,11 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     h += '<div class="daymeta">';
     h += '<span class="pill">Неделя ' + week.number + '</span>';
     h += '<span>' + esc(day.weekday) + ', ' + humanDate(dayDate(day)) + '</span>';
+    var lag = isoDiff(dayDate(day), todayISO());
+    if (STATE.flowMode && lag > 0 && !isClosed(day)) {
+      h += '<span class="pill" style="color:var(--yellow);border-color:var(--yellow)">отставание ' +
+        lag + ' ' + plural(lag, 'день', 'дня', 'дней') + '</span>';
+    }
     h += '<span class="faint">·</span><span>' + esc(week.title) + '</span>';
     if (day.hot) h += '<span class="pill hot">🔥 критический</span>';
     if (day.timed) h += '<span class="pill">⏱ под таймер</span>';
@@ -837,12 +897,12 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
 
     var p = dayProgress(day, mode);
     h += '<div class="row" style="margin-top:14px">';
-    h += '<div class="seg" role="group" aria-label="Режим дня">' +
+    h += '<div class="seg" role="group" aria-label="Норма дня">' +
       [20, 60, 120].map(function (m) {
         return '<button type="button" data-act="mode" data-mode="' + m + '" aria-pressed="' + (mode === m) + '">' + m + ' мин</button>';
       }).join('') + '</div>';
     h += '<div class="spacer"></div>';
-    h += '<div class="small muted nums">' + p.done + ' / ' + p.total + '</div>';
+    h += '<div class="small muted nums">' + p.done + ' / ' + p.total + ' по норме</div>';
     h += '</div>';
     h += '<div style="margin-top:8px">' + bar(p.done, p.total) + '</div>';
     h += '</div>';
@@ -872,7 +932,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       h += '<button class="tierhead" type="button" data-act="tier" data-key="' + key + '" aria-expanded="' + open + '">' +
         '<span class="caret" aria-hidden="true">▶</span>' +
         '<span class="lvl">' + (i === 0 ? '20 мин' : '+' + t.level + ' мин') + '</span>' +
-        (dim ? '<span class="faint small">сверх режима</span>' : '') +
+        (dim ? '<span class="faint small">сверх нормы — уйдёт в «Отложено»</span>' : '') +
         '<span class="cnt">' + tp.done + '/' + tp.total + '</span></button>';
       h += '<div class="tierbody">' + t.items.map(function (it) {
         return itemRow(it, { showNumber: true });
@@ -883,15 +943,24 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     // итог дня
     if (ds.completedAt) {
       var sum = daySummary(day, mode);
+      var skipped = itemIdsOfDay(day, null).filter(function (id) { return !st(id).done; }).length;
       h += '<div class="card summary"><strong>День завершён</strong> · ' + humanDate(ds.completedAt.slice(0, 10)) +
         '<div class="small" style="margin-top:6px">🟢 ' + sum.green + ' · 🟡 ' + sum.yellow +
         ' · 🔴 ' + sum.red + ' ' + plural(sum.red, 'вопрос ушёл', 'вопроса ушло', 'вопросов ушло') + ' в красную зону' +
+        (skipped ? ' · ' + skipped + ' ' + plural(skipped, 'пункт', 'пункта', 'пунктов') + ' в «Отложено»' : '') +
         '</div>' +
         '<div style="margin-top:10px"><button class="btn sm" type="button" data-act="unfinish">Отменить завершение</button></div></div>';
     } else {
+      var left = itemIdsOfDay(day, null).filter(function (id) { return !st(id).done; }).length;
+      var normLeft = itemIdsOfDay(day, tiersForMode(mode)).filter(function (id) { return !st(id).done; }).length;
       h += '<div class="card tight"><div class="row">' +
-        '<button class="btn primary" type="button" data-act="finish">Завершить день</button>' +
-        '<span class="small faint">Зафиксирует дату и покажет сводку</span>' +
+        '<button class="btn primary" type="button" data-act="finish">' +
+        (normLeft ? 'Завершить досрочно' : 'Завершить день') + '</button>' +
+        '<span class="small faint">' + (normLeft
+          ? 'Норма не выполнена: ' + normLeft + ' ' + plural(normLeft, 'пункт', 'пункта', 'пунктов') + ' останется. ' +
+            'В «Отложено» уйдёт ' + left + '.'
+          : left ? 'В «Отложено» уйдёт ' + left + ' ' + plural(left, 'пункт', 'пункта', 'пунктов') + ' сверх нормы'
+                 : 'Всё пройдено полностью') + '</span>' +
         '</div></div>';
     }
     return h;
@@ -974,8 +1043,9 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
   }
 
   function viewRed() {
-    var all = collectFlagged();
-    var reds = all.filter(function (x) { return x.conf === 'red'; }).length;
+    var isSkipped = V.redTab === 'skipped';
+    var all = isSkipped ? collectSkipped() : collectFlagged();
+    var reds = isSkipped ? all.length : all.filter(function (x) { return x.conf === 'red'; }).length;
     var topics = [];
     all.forEach(function (x) { if (topics.indexOf(x.ref.day.topic) < 0) topics.push(x.ref.day.topic); });
 
@@ -987,14 +1057,24 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     }
 
     var h = '<h1 class="page">Красная зона</h1>';
-    h += '<p class="sub nums">' + reds + ' ' + plural(reds, 'вопрос', 'вопроса', 'вопросов') + ' в красной зоне' +
-      (V.showYellow ? ', плюс жёлтые' : '') + '</p>';
+
+    // вкладки: охват и уверенность — разные оси, счётчики раздельные
+    h += '<div class="seg" role="group" aria-label="Что показывать" style="margin-bottom:12px">' +
+      '<button type="button" data-act="redtab" data-tab="conf" aria-pressed="' + (!isSkipped) + '">🔴 Не даётся · ' + redCount() + '</button>' +
+      '<button type="button" data-act="redtab" data-tab="skipped" aria-pressed="' + isSkipped + '">Отложено · ' + skippedCount() + '</button>' +
+      '</div>';
+
+    h += '<p class="sub nums">' + (isSkipped
+      ? reds + ' ' + plural(reds, 'пункт', 'пункта', 'пунктов') + ' из закрытых дней осталось непройденными'
+      : reds + ' ' + plural(reds, 'вопрос', 'вопроса', 'вопросов') + ' в красной зоне' + (V.showYellow ? ', плюс жёлтые' : '')) + '</p>';
 
     h += '<div class="card tight"><div class="row">';
     h += '<button class="btn sm" type="button" data-act="random5">Случайные 5</button>';
     if (V.random) h += '<button class="btn sm" type="button" data-act="clearrandom">Показать все</button>';
     h += '<span class="spacer"></span>';
-    h += '<button class="chip" type="button" data-act="showyellow" aria-pressed="' + V.showYellow + '">показывать также 🟡</button>';
+    if (!isSkipped) {
+      h += '<button class="chip" type="button" data-act="showyellow" aria-pressed="' + V.showYellow + '">показывать также 🟡</button>';
+    }
     h += '</div>';
     if (topics.length > 1 && !V.random) {
       h += '<div class="chips">';
@@ -1011,7 +1091,9 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     if (!shown.length) {
       h += '<div class="card muted small">' + (all.length
         ? 'В этой выборке пусто.'
-        : 'Пока пусто. Отмечайте 🔴 те вопросы, которые не смогли объяснить вслух — они соберутся здесь по темами.') + '</div>';
+        : isSkipped
+          ? 'Пока пусто. Сюда попадут пункты сверх нормы из дней, которые вы закроете — чтобы прогнать их в конце.'
+          : 'Пока пусто. Отмечайте 🔴 те вопросы, которые не смогли объяснить вслух — они соберутся здесь по темам.') + '</div>';
       return h;
     }
 
@@ -1026,11 +1108,23 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       h += '<div class="topicgroup"><h3>' + esc(tp) + ' · ' + groups[tp].length + '</h3>';
       groups[tp].forEach(function (x) {
         var it = x.ref.item, d = x.ref.day, w = x.ref.week;
-        h += '<div class="rzitem' + (x.conf === 'yellow' ? ' y' : '') + '" data-item="' + it.id + '">';
-        h += '<div>' + md(it.text) + (it.note ? '<span class="inote">' + md(it.note) + '</span>' : '') + '</div>';
+        h += '<div class="rzitem' + (isSkipped ? ' sk' : (x.conf === 'yellow' ? ' y' : '')) + '" data-item="' + it.id + '">';
+        h += '<div class="row" style="align-items:flex-start;gap:9px;flex-wrap:nowrap">';
+        if (isSkipped) {
+          h += '<button class="chk" type="button" data-act="done" data-id="' + it.id +
+            '" aria-pressed="false" title="Сделано" aria-label="Сделано">✓</button>';
+        }
+        h += '<span style="flex:1 1 auto;min-width:0">' + md(it.text) +
+          (it.note ? '<span class="inote">' + md(it.note) + '</span>' : '') + '</span>';
+        h += '</div>';
         h += '<div class="src">';
-        h += '<span class="confs">' + confBtn(it.id, 'red', 'r', '🔴') + confBtn(it.id, 'yellow', 'y', '🟡') +
-          confBtn(it.id, 'green', 'g', '🟢') + '</span>';
+        if (isSkipped) {
+          h += '<span class="pill">' + esc(TYPE_LABEL[it.type] || it.type) + '</span>';
+          if (st(it.id).conf === 'red') h += '<span title="ещё и в красной зоне">🔴</span>';
+        } else {
+          h += '<span class="confs">' + confBtn(it.id, 'red', 'r', '🔴') + confBtn(it.id, 'yellow', 'y', '🟡') +
+            confBtn(it.id, 'green', 'g', '🟢') + '</span>';
+        }
         h += '<button class="link" type="button" data-act="goto" data-id="' + it.id + '">Неделя ' + w.number +
           ' · ' + esc(d.weekday) + ' ' + esc(d.title) + '</button>';
         h += '</div></div>';
@@ -1150,7 +1244,22 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       : 'программа пройдена');
     h += '</div>';
 
-    h += '<div class="card" style="margin-top:14px"><strong style="font-size:13.5px">Прогресс по неделям</strong><div style="margin-top:8px">';
+    var fc = forecast();
+    h += '<div class="card" style="margin-top:14px"><strong style="font-size:13.5px">Прогноз</strong>';
+    h += '<div class="scrollx"><table class="tbl" style="margin-top:6px"><tbody>';
+    h += '<tr><td>дней программы закрыто</td><td class="n">' + fc.closed + ' / ' + DAYS.length + '</td></tr>';
+    h += '<tr><td>темп за последние 14 дней</td><td class="n">' +
+      (fc.rate > 0 ? fc.rate.toFixed(2) + ' дня программы в день' : '—') + '</td></tr>';
+    h += '<tr><td>финиш при этом темпе</td><td class="n">' +
+      (fc.finish ? humanDate(fc.finish) : '—') + '</td></tr>';
+    h += '<tr><td>плановый финиш</td><td class="n">' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)) + '</td></tr>';
+    h += '<tr><td>' + (fc.lag > 0 ? 'отставание от плана' : fc.lag < 0 ? 'опережение плана' : 'отклонение от плана') +
+      '</td><td class="n">' + Math.abs(fc.lag) + ' ' + plural(Math.abs(fc.lag), 'день', 'дня', 'дней') + '</td></tr>';
+    h += '<tr><td>отложено на потом</td><td class="n">' + skippedCount() + ' ' +
+      plural(skippedCount(), 'пункт', 'пункта', 'пунктов') + '</td></tr>';
+    h += '</tbody></table></div></div>';
+
+    h += '<div class="card"><strong style="font-size:13.5px">Прогресс по неделям</strong><div style="margin-top:8px">';
     PROGRAM.weeks.forEach(function (w) {
       var done = 0, total = 0;
       w.days.forEach(function (d) { var p = dayProgressAll(d); done += p.done; total += p.total; });
@@ -1208,6 +1317,36 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     return s;
   }
 
+  /**
+   * Прогноз. Темп считаем по completedAt закрытых дней — отдельная история отметок не нужна.
+   * Только факты: сколько дней программы закрывается за календарный день и когда это кончится.
+   */
+  function forecast() {
+    var closed = 0, recent = 0;
+    var t = todayISO();
+    DAYS.forEach(function (e) {
+      var v = STATE.days[e.day.id];
+      if (!v || !v.completedAt) return;
+      closed++;
+      var d = String(v.completedAt).slice(0, 10);
+      if (isoDiff(d, t) >= 0 && isoDiff(d, t) < 14) recent++;
+    });
+    var remaining = DAYS.length - closed;
+    var rate = recent / 14;                       // дней программы за календарный день
+    var out = { closed: closed, remaining: remaining, rate: rate, eta: null, finish: null, lag: null };
+    if (rate > 0 && remaining > 0) {
+      out.eta = Math.ceil(remaining / rate);
+      out.finish = isoAdd(t, out.eta);
+    } else if (remaining === 0) {
+      out.finish = t;
+      out.eta = 0;
+    }
+    // отставание: сколько дней программы должно было быть закрыто к сегодня по плану
+    var planned = Math.max(0, Math.min(DAYS.length, isoDiff(STATE.startDate, t) + 1));
+    out.lag = planned - closed;
+    return out;
+  }
+
   /** Серия: сколько дней подряд закрыт хотя бы блок «20 мин». */
   function calcStreak() {
     var t = todayISO();
@@ -1240,6 +1379,25 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       '<div class="hint">Все 65 дней пересчитываются от этой даты, структура недель сохраняется. ' +
       'Сейчас программа идёт с ' + humanDate(STATE.startDate) + ' по ' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)) + '. ' +
       'Прогресс привязан к пунктам, а не к датам, и не теряется.</div>' +
+      '</div></div>';
+
+    h += '<div class="card"><div class="field">' +
+      '<label>Норма дня — сколько нужно закрыть, чтобы день считался пройденным</label>' +
+      '<div class="seg" role="group">' +
+      [20, 60, 120].map(function (m) {
+        return '<button type="button" data-act="norm" data-norm="' + m + '" aria-pressed="' + (STATE.norm === m) + '">' + m + ' мин</button>';
+      }).join('') + '</div>' +
+      '<div class="hint">При норме 60 минут программа проходится за 64 дня — ровно в срок — и покрывает 64% материала. ' +
+      'Блок «+60 мин» остаётся сверх нормы и попадает в «Отложено».</div>' +
+      '</div>' +
+      '<div class="field" style="margin-bottom:0">' +
+      '<label>Не терять непройденное</label>' +
+      '<div class="seg" role="group">' +
+      '<button type="button" data-act="flow" data-flow="1" aria-pressed="' + (STATE.flowMode === true) + '">Плавающий календарь</button>' +
+      '<button type="button" data-act="flow" data-flow="0" aria-pressed="' + (STATE.flowMode === false) + '">Строго по датам</button>' +
+      '</div>' +
+      '<div class="hint">Плавающий календарь: «Сегодня» показывает первый незакрытый день. ' +
+      'Не успели — программа сдвигается, день не сгорает. Плановые даты в разделе «Программа» не меняются.</div>' +
       '</div></div>';
 
     h += '<div class="card"><div class="field">' +
@@ -1439,13 +1597,31 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
   }
 
   var ACTIONS = {
-    nav: function (el) { go(el.getAttribute('data-view')); },
+    nav: function (el) {
+      var v = el.getAttribute('data-view');
+      // «Сегодня» всегда возвращает к актуальному дню, а не к открытому ранее из «Программы»
+      if (v === 'today') V.dayId = null;
+      go(v);
+    },
 
     done: function (el) {
       var id = el.getAttribute('data-id');
       var s = st(id);
       s.done = !s.done;
+      var ref = ITEM_INDEX[id];
+      // норма выполнена — день закрывается сам, отдельно жать кнопку не нужно
+      if (s.done && ref && !isClosed(ref.day) && normDone(ref.day)) {
+        dst(ref.day.id).completedAt = new Date().toISOString();
+        save();
+        var sm = daySummary(ref.day, dayMode(ref.day));
+        var sk = itemIdsOfDay(ref.day, null).filter(function (x) { return !st(x).done; }).length;
+        render();
+        toast('Норма выполнена, день закрыт· 🟢 ' + sm.green + ' · 🔴 ' + sm.red +
+          (sk ? ' · ' + sk + ' в «Отложено»' : ''));
+        return;
+      }
       save();
+      if (V.name === 'red' && V.redTab === 'skipped') { render(); return; }
       refreshItem(id);
       updateDayChrome();
     },
@@ -1461,6 +1637,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
 
     mode: function (el) {
       var r = currentDayEntry();
+      // разовое переопределение нормы для этого дня; глобальная норма — в «Настройках»
       dst(r.entry.day.id).mode = +el.getAttribute('data-mode');
       // ручные раскрытия сбрасываем — режим снова главный
       Object.keys(V.openTiers).forEach(function (k) {
@@ -1503,12 +1680,20 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
 
     finish: function () {
       var r = currentDayEntry();
-      var ds = dst(r.entry.day.id);
+      var day = r.entry.day;
+      var ds = dst(day.id);
+      var mode = dayMode(day);
+      var normLeft = itemIdsOfDay(day, tiersForMode(mode)).filter(function (id) { return !st(id).done; }).length;
+      var left = itemIdsOfDay(day, null).filter(function (id) { return !st(id).done; }).length;
+      if (normLeft && !window.confirm('Норма дня не выполнена: не отмечено ' + normLeft +
+        '. Закрыть день досрочно? В «Отложено» уйдёт ' + left + ' ' +
+        plural(left, 'пункт', 'пункта', 'пунктов') + ' — ничего не потеряется.')) return;
       ds.completedAt = new Date().toISOString();
       save();
       render();
-      var s = daySummary(r.entry.day, ds.mode);
-      toast('День закрыт: 🟢 ' + s.green + ' · 🟡 ' + s.yellow + ' · 🔴 ' + s.red);
+      var s = daySummary(day, mode);
+      toast('День закрыт: 🟢 ' + s.green + ' · 🟡 ' + s.yellow + ' · 🔴 ' + s.red +
+        (left ? ' · ' + left + ' в «Отложено»' : ''));
     },
     unfinish: function () {
       var r = currentDayEntry();
@@ -1523,9 +1708,10 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     },
 
     topic: function (el) { V.topic = el.getAttribute('data-topic'); V.random = null; render(); },
+    redtab: function (el) { V.redTab = el.getAttribute('data-tab'); V.topic = '*'; V.random = null; render(); },
     showyellow: function () { V.showYellow = !V.showYellow; V.random = null; render(); },
     random5: function () {
-      var pool = collectFlagged().map(function (x) { return x.id; });
+      var pool = (V.redTab === 'skipped' ? collectSkipped() : collectFlagged()).map(function (x) { return x.id; });
       for (var i = pool.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
         var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
@@ -1541,6 +1727,19 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     theme: function (el) {
       STATE.settings.theme = el.getAttribute('data-theme');
       save(); render();
+    },
+
+    norm: function (el) {
+      STATE.norm = +el.getAttribute('data-norm');
+      save(); render();
+      toast('Норма дня: ' + STATE.norm + ' минут');
+    },
+
+    flow: function (el) {
+      STATE.flowMode = el.getAttribute('data-flow') === '1';
+      V.dayId = null;
+      save(); render();
+      toast(STATE.flowMode ? 'Плавающий календарь включён' : 'Дни идут строго по датам');
     },
 
     startdate: function () {
