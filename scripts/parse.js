@@ -145,7 +145,7 @@ function detectTimerMinutes(text) {
 function parse(markdown) {
   const lines = markdown.split(/\r?\n/);
 
-  const program = { start: PROGRAM_START, rules: [], weeks: [] };
+  const program = { start: PROGRAM_START, rules: [], composition: [], weeks: [] };
   const risks = {};
 
   let week = null;
@@ -157,6 +157,7 @@ function parse(markdown) {
 
   // куда мы попали: 'preamble' | 'rules' | 'week' | 'day' | 'framework' | 'summary'
   let region = 'preamble';
+  let summaryTable = 0;
   let frameworkTarget = null;
 
   const flushDay = () => {
@@ -281,11 +282,17 @@ function parse(markdown) {
       continue;
     }
 
-    // ── итоговая таблица рисков
+    // ── «Сводка»: таблица рисков по неделям, затем таблица состава программы
     if (region === 'summary') {
-      const m = line.match(/^\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$/);
-      if (m) { risks[Number(m[1])] = m[3].trim(); continue; }
-      if (/^\|/.test(line)) continue;
+      if (/^\|[\s|:-]+\|$/.test(line)) { summaryTable++; continue; } // строка-разделитель
+      if (/^\|/.test(line)) {
+        const cells = line.split('|').slice(1, -1).map((s) => s.trim());
+        if (cells.length === 3) {
+          if (summaryTable === 1 && /^\d+$/.test(cells[0])) { risks[Number(cells[0])] = cells[2]; continue; }
+          if (summaryTable === 2) { program.composition.push({ what: cells[0], count: cells[1], where: cells[2] }); continue; }
+        }
+        continue; // шапки таблиц
+      }
       program.outro = (program.outro ? program.outro + '\n' : '') + line;
       continue;
     }

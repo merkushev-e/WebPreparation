@@ -208,8 +208,9 @@ h1.page { font-size: 19px; margin: 0 0 4px; font-weight: 660; letter-spacing: -.
 .item:hover { background: var(--bg-hover); }
 .item.is-done .itext { color: var(--text-faint); }
 .item.is-done .itext strong { font-weight: 500; }
-.item.flash { animation: flash 1.1s ease-out; }
-@keyframes flash { 0%,55% { background: var(--accent-dim); } 100% { background: transparent; } }
+/* подсветка найденного: анимация — только 150 мс проявления и угасания,
+   между ними класс просто держится (удержание состояния, а не движение) */
+.item.flash { background: var(--accent-dim); transition: background 150ms ease-out; }
 
 .chk {
   flex: 0 0 auto; margin-top: 2px; width: 17px; height: 17px; border-radius: 4px;

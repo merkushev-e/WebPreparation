@@ -808,6 +808,14 @@
         (PROGRAM.outro ? '<div class="hint">' + md(PROGRAM.outro) + '</div>' : '') +
         '</div>';
     }
+
+    if (PROGRAM.composition && PROGRAM.composition.length) {
+      h += '<div class="card"><strong style="font-size:13.5px">Состав программы</strong><div class="scrollx">' +
+        '<table class="tbl"><thead><tr><th>что</th><th class="n">сколько</th><th>где</th></tr></thead><tbody>' +
+        PROGRAM.composition.map(function (c) {
+          return '<tr><td>' + md(c.what) + '</td><td class="n">' + md(c.count) + '</td><td>' + md(c.where) + '</td></tr>';
+        }).join('') + '</tbody></table></div></div>';
+    }
     return h;
   }
 
@@ -841,7 +849,7 @@
       if (el) {
         el.scrollIntoView({ block: 'center' });
         el.classList.add('flash');
-        setTimeout(function () { el.classList.remove('flash'); }, 1200);
+        setTimeout(function () { el.classList.remove('flash'); }, 900);
       }
       V.focus = null;
     }
