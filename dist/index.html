@@ -1030,15 +1030,17 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     h += '<div style="flex:1 1 auto;min-width:0">';
     h += '<div class="daymeta">';
     h += '<span class="pill">Неделя ' + week.number + '</span>';
-    var realWd = weekdayOf(dayDate(day));
-    h += '<span>' + realWd + ', ' + humanDate(dayDate(day)) + '</span>';
-    if (realWd !== day.weekday) {
-      h += '<span class="faint" title="день недели по исходному плану программы">(по плану ' + esc(day.weekday) + ')</span>';
-    }
-    var lag = isoDiff(dayDate(day), todayISO());
-    if (STATE.flowMode && lag > 0 && !isClosed(day) && closedDaysCount() > 0) {
+    var planned = dayDate(day);
+    var lag = isoDiff(planned, todayISO());
+    var overdue = STATE.flowMode && lag > 0 && !isClosed(day);
+    var shown = overdue ? todayISO() : planned;   // просроченный день делается сегодня
+    h += '<span>' + weekdayOf(shown) + ', ' + humanDate(shown) + '</span>';
+    if (overdue) {
+      h += '<span class="faint">план ' + humanDate(planned).replace(/ \d{4}$/, '') + '</span>';
       h += '<span class="pill" style="color:var(--yellow);border-color:var(--yellow)">отставание ' +
         lag + ' ' + plural(lag, 'день', 'дня', 'дней') + '</span>';
+    } else if (weekdayOf(shown) !== day.weekday) {
+      h += '<span class="faint" title="день недели по исходному плану программы">(по плану ' + esc(day.weekday) + ')</span>';
     }
     h += '<span class="faint">·</span><span>' + esc(week.title) + '</span>';
     if (day.hot) h += '<span class="pill hot">🔥 критический</span>';
@@ -1512,8 +1514,10 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     }
     // отставание: сколько дней программы должно было быть закрыто к сегодня по плану
     // Пока не закрыт ни один день, говорить об отставании нечестно — программа не начата.
-    var planned = Math.max(0, Math.min(DAYS().length, isoDiff(STATE.startDate, t) + 1));
-    out.lag = closed > 0 ? planned - closed : null;
+    // сколько дней должно было быть закрыто: считаем ПОЛНОСТЬЮ прошедшие дни,
+    // иначе в день старта приложение рапортует об отставании на день, который ещё идёт
+    var planned = Math.max(0, Math.min(DAYS().length, isoDiff(STATE.startDate, t)));
+    out.lag = planned > 0 ? planned - closed : null;
     return out;
   }
 
