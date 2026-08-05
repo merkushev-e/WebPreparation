@@ -596,27 +596,85 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
   })();
 
   /**
-   * Дни, входящие в программу пользователя. Недели до STATE.startWeek скрыты целиком:
-   * данные не удалены, просто не участвуют ни в одном экране и не занимают дат.
+   * Дни программы пользователя. Две настройки меняют этот список:
+   *   startWeek — недели до неё скрыты целиком и не занимают дат;
+   *   splitSize — крупные дни режутся на части по N верхнеуровневых пунктов (N/3 в блок).
+   * Пункты и их id не меняются никогда — прогресс переживает любую перенарезку.
    */
+  var _days = null, _daysKey = '', _itemDay = {};
+
   function DAYS() {
+    var key = (STATE.startWeek || 0) + ':' + (STATE.splitSize || 0);
+    if (_daysKey !== key || !_days) { rebuildDays(); _daysKey = key; }
+    return _days;
+  }
+
+  function rebuildDays() {
     var from = STATE.startWeek || 0;
-    if (!from) return ALL_DAYS;
-    return ALL_DAYS.filter(function (e) { return e.week.number >= from; });
+    var size = STATE.splitSize || 0;
+    var out = [];
+    _itemDay = {};
+    ALL_DAYS.forEach(function (e) {
+      if (e.week.number < from) return;
+      sliceDay(e, size).forEach(function (v) { out.push(v); });
+    });
+    out.forEach(function (v, i) {
+      v.day.index = i;
+      itemIdsOfDay(v.day, null).forEach(function (id) { _itemDay[id] = v; });
+    });
+    _days = out;
   }
+
+  /** Режет день на части по `size` верхнеуровневых пунктов: size/3 в каждый из трёх блоков. */
+  function sliceDay(entry, size) {
+    var src = entry.day;
+    if (!size || !src.tiers.length) return [virtualDay(entry, src.tiers, 1, 1)];
+    var flat = [];
+    src.tiers.forEach(function (t) { t.items.forEach(function (it) { flat.push(it); }); });
+    if (flat.length <= size) return [virtualDay(entry, src.tiers, 1, 1)];
+
+    var per = Math.max(1, Math.round(size / 3));
+    var parts = [], i = 0;
+    while (i < flat.length) parts.push(flat.slice(i, i += size));
+    return parts.map(function (chunk, k) {
+      var tiers = [
+        { level: 20, items: chunk.slice(0, per) },
+        { level: 40, items: chunk.slice(per, per * 2) },
+        { level: 60, items: chunk.slice(per * 2) }
+      ];
+      return virtualDay(entry, tiers, k + 1, parts.length);
+    });
+  }
+
+  function virtualDay(entry, tiers, part, parts) {
+    var src = entry.day;
+    var day = {
+      id: parts > 1 ? src.id + 'p' + part : src.id,
+      srcId: src.id,
+      part: part, parts: parts,
+      date: null, index: 0,
+      weekday: src.weekday, title: src.title, hot: src.hot, timed: src.timed,
+      topic: src.topic, prose: src.prose,
+      tiers: tiers
+    };
+    return { week: entry.week, day: day };
+  }
+
   /** Индекс первого активного дня — от него отсчитываются все даты. */
-  function dayOffset() {
-    var d = DAYS();
-    return d.length ? d[0].day.index : 0;
-  }
+  function dayOffset() { return 0; }
+
   function activeWeeks() {
     var from = STATE.startWeek || 0;
     return PROGRAM.weeks.filter(function (w) { return w.number >= from; });
   }
   function isActiveDay(day) {
     var from = STATE.startWeek || 0;
-    return !from || (DAY_BY_ID[day.id] && DAY_BY_ID[day.id].week.number >= from);
+    if (!from) return true;
+    var ref = DAY_BY_ID[day.srcId || day.id];
+    return !ref || ref.week.number >= from;
   }
+  /** Виртуальный день, в который попал пункт (после возможной перенарезки). */
+  function dayOfItem(id) { DAYS(); return _itemDay[id] || null; }
 
   /** Все id пунктов дня в первых `n` блоках (n = null — все блоки). */
   function itemIdsOfDay(day, n) {
@@ -641,6 +699,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       version: STATE_VERSION,
       startDate: defaultStart(),
       startWeek: 1,    // с какой недели начинается программа; Неделя 0 (калибровка) скрыта
+      splitSize: 6,    // резать дни по 6 верхнеуровневых пунктов (2+2+2); 0 — не резать
       norm: 60,        // норма дня: сколько блоков нужно закрыть, чтобы день считался пройденным
       flowMode: true,  // плавающий календарь: «Сегодня» = первый незакрытый день
       items: {},
@@ -655,6 +714,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     if (!raw || typeof raw !== 'object') return s;
     if (typeof raw.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.startDate)) s.startDate = raw.startDate;
     if (typeof raw.startWeek === 'number' && raw.startWeek >= 0 && raw.startWeek <= 9) s.startWeek = raw.startWeek | 0;
+    if (raw.splitSize === 0 || raw.splitSize === 3 || raw.splitSize === 6 || raw.splitSize === 9) s.splitSize = raw.splitSize;
     if (raw.norm === 20 || raw.norm === 60 || raw.norm === 120) s.norm = raw.norm;
     if (typeof raw.flowMode === 'boolean') s.flowMode = raw.flowMode;
     if (raw.items && typeof raw.items === 'object') {
@@ -715,7 +775,14 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     if (!v) { v = STATE.days[id] = { mode: null, completedAt: null }; }
     return v;
   }
-  function dayDate(day) { return isoAdd(STATE.startDate, day.index - dayOffset()); }
+  function dayDate(day) { return isoAdd(STATE.startDate, day.index); }
+  /** Виртуальный день по id — работает и для id вида «w1-d1p2». */
+  function findDay(id) {
+    if (!id) return null;
+    var d = DAYS();
+    for (var i = 0; i < d.length; i++) if (d[i].day.id === id) return d[i];
+    return null;
+  }
 
   /** Норма конкретного дня: разовое переопределение либо глобальная норма. */
   function dayMode(day) {
@@ -724,12 +791,15 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
   }
   function isClosed(day) {
     var v = STATE.days[day.id];
-    return !!(v && v.completedAt);
+    if (v && v.completedAt) return true;
+    // при смене нарезки id частей меняются, а отметки пунктов — нет: считаем по ним
+    return normDone(day);
   }
   /** Норма дня выполнена — все пункты в её пределах отмечены. */
   function normDone(day) {
     var ids = itemIdsOfDay(day, tiersForMode(dayMode(day)));
-    if (!ids.length) return !!day.prose; // день без блоков закрывается вручную
+    // день без пунктов («Вс 4 окт · Пауза») закрывается только кнопкой, сам собой — никогда
+    if (!ids.length) return false;
     return ids.every(function (id) { return st(id).done; });
   }
   /**
@@ -741,7 +811,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     DAYS().forEach(function (e) {
       if (!isClosed(e.day)) return;
       itemIdsOfDay(e.day, null).forEach(function (id) {
-        if (!st(id).done) out.push({ id: id, ref: ITEM_INDEX[id] });
+        if (!st(id).done) out.push({ id: id, ref: { item: ITEM_INDEX[id].item, day: e.day, week: e.week } });
       });
     });
     return out;
@@ -793,7 +863,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
   function redCount() {
     var n = 0;
     for (var k in STATE.items) {
-      if (STATE.items[k] && STATE.items[k].conf === 'red' && ITEM_INDEX[k] && isActiveDay(ITEM_INDEX[k].day)) n++;
+      if (STATE.items[k] && STATE.items[k].conf === 'red' && dayOfItem(k)) n++;
     }
     return n;
   }
@@ -930,9 +1000,8 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
   }
 
   function currentDayEntry() {
-    if (V.dayId && DAY_BY_ID[V.dayId]) {
-      return { entry: DAY_BY_ID[V.dayId], exact: dayDate(DAY_BY_ID[V.dayId].day) === todayISO(), pinned: true };
-    }
+    var pinned = findDay(V.dayId);
+    if (pinned) return { entry: pinned, exact: dayDate(pinned.day) === todayISO(), pinned: true };
     return resolveTodayDay();
   }
 
@@ -976,7 +1045,9 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     if (day.timed) h += '<span class="pill">⏱ под таймер</span>';
     if (ds.completedAt) h += '<span class="pill green">завершён</span>';
     h += '</div>';
-    h += '<h2>' + esc(day.title) + '</h2>';
+    h += '<h2>' + esc(day.title) +
+      (day.parts > 1 ? ' <span class="faint" style="font-weight:500;font-size:14px">· часть ' +
+        day.part + ' из ' + day.parts + '</span>' : '') + '</h2>';
     h += '</div>';
     h += '<div class="navday">' +
       '<button class="btn" type="button" data-act="prevday" ' + (idx === 0 ? 'disabled' : '') + ' aria-label="Предыдущий день">←</button>' +
@@ -1100,13 +1171,14 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       h += '<span class="caret faint" aria-hidden="true">' + (open ? '▾' : '▸') + '</span>';
       h += '</button>';
       h += '<div class="weekbody">';
-      w.days.forEach(function (d) {
+      DAYS().filter(function (e) { return e.week.id === w.id; }).map(function (e) { return e.day; }).forEach(function (d) {
         var p = dayProgressAll(d);
         var pct = p.total ? Math.round(p.done / p.total * 100) : 0;
         var isToday = dayDate(d) === t;
         h += '<button class="dayrow' + (isToday ? ' today' : '') + '" type="button" data-act="day" data-id="' + d.id + '">' +
           '<span class="wd">' + weekdayOf(dayDate(d)) + ' ' + dayDate(d).slice(8) + '.' + dayDate(d).slice(5, 7) + '</span>' +
-          '<span class="dt">' + esc(d.title) + (d.hot ? ' <span class="pill hot">🔥</span>' : '') +
+          '<span class="dt">' + esc(d.title) + (d.parts > 1 ? ' <span class="faint">· ' + d.part + '/' + d.parts + '</span>' : '') +
+          (d.hot ? ' <span class="pill hot">🔥</span>' : '') +
           ((STATE.days[d.id] && STATE.days[d.id].completedAt) ? ' <span class="pill green">✓</span>' : '') + '</span>' +
           bar(p.done, p.total) +
           '<span class="pc">' + pct + '%</span></button>';
@@ -1127,8 +1199,9 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       if (v.conf !== 'red' && !(V.showYellow && v.conf === 'yellow')) return;
       var ref = ITEM_INDEX[id];
       if (!ref) return; // неизвестный itemId из старого состояния — молча игнорируем
-      if (!isActiveDay(ref.day)) return; // неделя скрыта из программы
-      out.push({ id: id, conf: v.conf, ref: ref });
+      var vd = dayOfItem(id);
+      if (!vd) return; // неделя скрыта из программы
+      out.push({ id: id, conf: v.conf, ref: { item: ref.item, day: vd.day, week: vd.week } });
     });
     out.sort(function (a, b) { return a.ref.day.index - b.ref.day.index; });
     return out;
@@ -1244,8 +1317,7 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     var hits = [];
     for (var i = 0; i < ALL_ITEMS.length && hits.length < 300; i++) {
       if (ALL_ITEMS[i]._lc.indexOf(needle) < 0) continue;
-      var r = ITEM_INDEX[ALL_ITEMS[i].id];
-      if (r && !isActiveDay(r.day)) continue;
+      if (!dayOfItem(ALL_ITEMS[i].id)) continue;
       hits.push(ALL_ITEMS[i]);
     }
     if (!hits.length) return '<div class="card muted small" style="margin-top:14px">Ничего не найдено.</div>';
@@ -1253,7 +1325,8 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
     var h = '<p class="sub nums" style="margin:14px 0 8px">' + hits.length +
       (hits.length >= 300 ? '+' : '') + ' ' + plural(hits.length, 'совпадение', 'совпадения', 'совпадений') + '</p>';
     hits.forEach(function (it) {
-      var ref = ITEM_INDEX[it.id];
+      var vd = dayOfItem(it.id);
+      var ref = { week: vd.week, day: vd.day };
       var s = st(it.id);
       var dot = s.conf ? ({ red: '🔴', yellow: '🟡', green: '🟢' })[s.conf] : (s.done ? '✓' : '');
       h += '<div class="rzitem" style="border-left-color:var(--border-str)">';
@@ -1508,6 +1581,22 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       ' Сейчас первый день — <strong>' + esc(DAYS()[0].week.title) + ' · ' + esc(DAYS()[0].day.title) + '</strong>.' +
       '</div></div></div>';
 
+    var sizes = [[0, 'весь день'], [3, '3 · 1+1+1'], [6, '6 · 2+2+2'], [9, '9 · 3+3+3']];
+    var d = DAYS();
+    h += '<div class="card"><div class="field" style="margin-bottom:0">' +
+      '<label>Сколько пунктов в одном дне</label>' +
+      '<div class="seg" role="group">' + sizes.map(function (x) {
+        return '<button type="button" data-act="split" data-size="' + x[0] + '" aria-pressed="' +
+          ((STATE.splitSize || 0) === x[0]) + '">' + x[1] + '</button>';
+      }).join('') + '</div>' +
+      '<div class="hint">Большие дни режутся на части: тема остаётся той же, но растягивается на ' +
+      'несколько дней, а вся программа сдвигается. Пункты и отметки не меняются — режьте и ' +
+      'склеивайте сколько угодно, прогресс переживает это. ' +
+      '<strong>Сейчас: ' + d.length + ' ' + plural(d.length, 'день', 'дня', 'дней') + '</strong>, ' +
+      'с ' + humanDate(STATE.startDate).replace(/ \d{4}$/, '') + ' по ' +
+      humanDate(isoAdd(STATE.startDate, d.length - 1)) + '.</div>' +
+      '</div></div>';
+
     h += '<div class="card"><div class="field">' +
       '<label>Норма дня — сколько нужно закрыть, чтобы день считался пройденным</label>' +
       '<div class="seg" role="group">' +
@@ -1714,10 +1803,15 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
 
   function gotoItem(id) {
     var ref = ITEM_INDEX[id];
-    if (!ref) return;
-    // раскрываем блок, в котором лежит пункт
-    V.openTiers[ref.day.id + ':' + ref.tierIdx] = true;
-    V.dayId = ref.day.id;
+    var vd = dayOfItem(id);
+    if (!ref || !vd) return;
+    // раскрываем именно тот блок нужной части дня, где пункт лежит после перенарезки
+    vd.day.tiers.forEach(function (t, i) {
+      if (t.items.some(function (it) {
+        return it.id === id || (it.children || []).some(function (c) { return c.id === id; });
+      })) V.openTiers[vd.day.id + ':' + i] = true;
+    });
+    V.dayId = vd.day.id;
     V.focus = id;
     V.name = 'today';
     window.scrollTo(0, 0);
@@ -1736,9 +1830,12 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       var id = el.getAttribute('data-id');
       var s = st(id);
       s.done = !s.done;
-      var ref = ITEM_INDEX[id];
-      // норма выполнена — день закрывается сам, отдельно жать кнопку не нужно
-      if (s.done && ref && !isClosed(ref.day) && normDone(ref.day)) {
+      var vd = dayOfItem(id);
+      var ref = vd ? { day: vd.day } : null;
+      var rec = ref ? STATE.days[ref.day.id] : null;
+      // норма выполнена — день закрывается сам. Проверяем именно completedAt, а не isClosed():
+      // isClosed() сам опирается на normDone(), иначе условие гасит себя же.
+      if (s.done && ref && !(rec && rec.completedAt) && normDone(ref.day)) {
         dst(ref.day.id).completedAt = new Date().toISOString();
         save();
         var sm = daySummary(ref.day, dayMode(ref.day));
@@ -1866,6 +1963,18 @@ var PROGRAM = {"start":"2026-08-01","rules":["**Пол — 20 минут.** В �
       toast(n === 0 ? 'Показана вся программа с Недели 0'
         : n === 1 ? 'Программа начинается с Недели 1; Неделя 0 скрыта'
         : 'Программа начинается с Недели ' + n + '; недели 0–' + (n - 1) + ' скрыты');
+    },
+
+    split: function (el) {
+      var n = +el.getAttribute('data-size');
+      if (n === (STATE.splitSize || 0)) return;
+      STATE.splitSize = n;
+      V.dayId = null; V.openWeeks = {}; V.openTiers = {}; V.random = null;
+      save(); render();
+      var d = DAYS();
+      toast(n ? 'По ' + n + ' пунктов в день · программа заняла ' + d.length + ' ' +
+        plural(d.length, 'день', 'дня', 'дней')
+        : 'Дни не режутся · программа заняла ' + d.length + ' ' + plural(d.length, 'день', 'дня', 'дней'));
     },
 
     norm: function (el) {
