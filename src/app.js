@@ -16,14 +16,14 @@
     'Пт': 'пятницы', 'Сб': 'субботы', 'Вс': 'воскресенья' };
   var WD_NOM = { 'Пн': 'понедельник', 'Вт': 'вторник', 'Ср': 'среда', 'Чт': 'четверг',
     'Пт': 'пятница', 'Сб': 'суббота', 'Вс': 'воскресенье' };
-  function rhythmWeekdayName() { return WD_FULL[DAYS[0].day.weekday] || DAYS[0].day.weekday; }
+  function rhythmWeekdayName() { return WD_FULL[DAYS()[0].day.weekday] || DAYS()[0].day.weekday; }
   function weekdayFull(wd) { return WD_NOM[wd] || wd; }
   /** Ближайшая дата (сегодня или позже) с тем же днём недели, что у первого дня программы. */
   function nextRhythmStart() {
     var t = todayISO();
     for (var i = 0; i < 7; i++) {
       var d = isoAdd(t, i);
-      if (weekdayOf(d) === DAYS[0].day.weekday) return d;
+      if (weekdayOf(d) === DAYS()[0].day.weekday) return d;
     }
     return t;
   }
@@ -100,7 +100,7 @@
 
   // ── индексы по программе ────────────────────────────────────────────────
 
-  var DAYS = [];        // [{week, day}] в хронологическом порядке
+  var ALL_DAYS = [];    // все 65 дней программы, [{week, day}] в хронологическом порядке
   var DAY_BY_ID = {};
   var ITEM_INDEX = {};  // itemId → {item, day, week, tierIdx}
   var ALL_ITEMS = [];
@@ -109,9 +109,9 @@
   (function buildIndex() {
     PROGRAM.weeks.forEach(function (w) {
       w.days.forEach(function (d) {
-        // одна и та же ссылка в обоих индексах — на ней держится DAYS.indexOf()
+        // одна и та же ссылка в обоих индексах — на ней держится DAYS().indexOf()
         var entry = { week: w, day: d };
-        DAYS.push(entry);
+        ALL_DAYS.push(entry);
         DAY_BY_ID[d.id] = entry;
         if (TOPICS.indexOf(d.topic) < 0) TOPICS.push(d.topic);
         d.tiers.forEach(function (t, ti) {
@@ -129,6 +129,29 @@
       it._lc = it._plain.toLowerCase();
     }
   })();
+
+  /**
+   * Дни, входящие в программу пользователя. Недели до STATE.startWeek скрыты целиком:
+   * данные не удалены, просто не участвуют ни в одном экране и не занимают дат.
+   */
+  function DAYS() {
+    var from = STATE.startWeek || 0;
+    if (!from) return ALL_DAYS;
+    return ALL_DAYS.filter(function (e) { return e.week.number >= from; });
+  }
+  /** Индекс первого активного дня — от него отсчитываются все даты. */
+  function dayOffset() {
+    var d = DAYS();
+    return d.length ? d[0].day.index : 0;
+  }
+  function activeWeeks() {
+    var from = STATE.startWeek || 0;
+    return PROGRAM.weeks.filter(function (w) { return w.number >= from; });
+  }
+  function isActiveDay(day) {
+    var from = STATE.startWeek || 0;
+    return !from || (DAY_BY_ID[day.id] && DAY_BY_ID[day.id].week.number >= from);
+  }
 
   /** Все id пунктов дня в первых `n` блоках (n = null — все блоки). */
   function itemIdsOfDay(day, n) {
@@ -152,6 +175,7 @@
     return {
       version: STATE_VERSION,
       startDate: defaultStart(),
+      startWeek: 1,    // с какой недели начинается программа; Неделя 0 (калибровка) скрыта
       norm: 60,        // норма дня: сколько блоков нужно закрыть, чтобы день считался пройденным
       flowMode: true,  // плавающий календарь: «Сегодня» = первый незакрытый день
       items: {},
@@ -165,6 +189,7 @@
     var s = emptyState();
     if (!raw || typeof raw !== 'object') return s;
     if (typeof raw.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.startDate)) s.startDate = raw.startDate;
+    if (typeof raw.startWeek === 'number' && raw.startWeek >= 0 && raw.startWeek <= 9) s.startWeek = raw.startWeek | 0;
     if (raw.norm === 20 || raw.norm === 60 || raw.norm === 120) s.norm = raw.norm;
     if (typeof raw.flowMode === 'boolean') s.flowMode = raw.flowMode;
     if (raw.items && typeof raw.items === 'object') {
@@ -225,7 +250,7 @@
     if (!v) { v = STATE.days[id] = { mode: null, completedAt: null }; }
     return v;
   }
-  function dayDate(day) { return isoAdd(STATE.startDate, day.index); }
+  function dayDate(day) { return isoAdd(STATE.startDate, day.index - dayOffset()); }
 
   /** Норма конкретного дня: разовое переопределение либо глобальная норма. */
   function dayMode(day) {
@@ -248,7 +273,7 @@
    */
   function collectSkipped() {
     var out = [];
-    DAYS.forEach(function (e) {
+    DAYS().forEach(function (e) {
       if (!isClosed(e.day)) return;
       itemIdsOfDay(e.day, null).forEach(function (id) {
         if (!st(id).done) out.push({ id: id, ref: ITEM_INDEX[id] });
@@ -258,12 +283,12 @@
   }
   function closedDaysCount() {
     var n = 0;
-    DAYS.forEach(function (e) { if (isClosed(e.day)) n++; });
+    DAYS().forEach(function (e) { if (isClosed(e.day)) n++; });
     return n;
   }
   function skippedCount() {
     var n = 0;
-    DAYS.forEach(function (e) {
+    DAYS().forEach(function (e) {
       if (!isClosed(e.day)) return;
       itemIdsOfDay(e.day, null).forEach(function (id) { if (!st(id).done) n++; });
     });
@@ -294,12 +319,27 @@
     { id: 'settings', label: 'Настройки', icon: '⚙' }
   ];
 
+  function activeItemCount() {
+    var n = 0;
+    DAYS().forEach(function (e) { n += itemIdsOfDay(e.day, null).length; });
+    return n;
+  }
+
   function redCount() {
     var n = 0;
     for (var k in STATE.items) {
-      if (STATE.items[k] && STATE.items[k].conf === 'red' && ITEM_INDEX[k]) n++;
+      if (STATE.items[k] && STATE.items[k].conf === 'red' && ITEM_INDEX[k] && isActiveDay(ITEM_INDEX[k].day)) n++;
     }
     return n;
+  }
+
+  function renderFooter() {
+    var el = document.querySelector('.sidefoot');
+    if (!el) return;
+    var d = DAYS();
+    el.innerHTML = humanDate(STATE.startDate).replace(/ \d{4}$/, '') + ' — ' +
+      humanDate(isoAdd(STATE.startDate, d.length - 1)) + '<br>' +
+      d.length + ' ' + plural(d.length, 'день', 'дня', 'дней') + ' · прогресс хранится в этом браузере.';
   }
 
   function renderNav() {
@@ -351,6 +391,14 @@
     return { done: done, total: ids.length };
   }
 
+  /** Текст пункта без ведущего эмодзи типа — его уже показывает иконка слева. */
+  function bodyText(it) {
+    var ic = TYPE_ICON[it.type];
+    var t = it.text;
+    if (ic && t.indexOf(ic) === 0) t = t.slice(ic.length).replace(/^\s+/, '');
+    return t;
+  }
+
   /** Строка пункта: чекбокс, иконка типа, текст, оценки уверенности, таймер. */
   function itemRow(it, opts) {
     opts = opts || {};
@@ -362,7 +410,7 @@
     h += '<span class="ic-type" aria-hidden="true" title="' + esc(TYPE_LABEL[it.type] || '') + '">' + icon + '</span>';
     h += '<span class="itext">';
     if (opts.showNumber && it.number != null) h += '<span class="qnum">' + it.number + '.</span>';
-    h += md(it.text);
+    h += md(bodyText(it));
     if (it.note) h += '<span class="inote">' + md(it.note) + '</span>';
     if (it.children && it.children.length) {
       h += '<ul class="subs">' + it.children.map(function (c) {
@@ -401,19 +449,19 @@
     var t = todayISO();
     // плавающий календарь: день не сгорает — работаем с первым незакрытым
     if (STATE.flowMode) {
-      for (var f = 0; f < DAYS.length; f++) {
-        if (!isClosed(DAYS[f].day)) return { entry: DAYS[f], exact: dayDate(DAYS[f].day) === t };
+      for (var f = 0; f < DAYS().length; f++) {
+        if (!isClosed(DAYS()[f].day)) return { entry: DAYS()[f], exact: dayDate(DAYS()[f].day) === t };
       }
-      return { entry: DAYS[DAYS.length - 1], exact: false, allDone: true };
+      return { entry: DAYS()[DAYS().length - 1], exact: false, allDone: true };
     }
-    for (var i = 0; i < DAYS.length; i++) {
-      if (dayDate(DAYS[i].day) === t) return { entry: DAYS[i], exact: true };
+    for (var i = 0; i < DAYS().length; i++) {
+      if (dayDate(DAYS()[i].day) === t) return { entry: DAYS()[i], exact: true };
     }
     // вне программы — ближайший незавершённый
-    for (var j = 0; j < DAYS.length; j++) {
-      if (!isClosed(DAYS[j].day)) return { entry: DAYS[j], exact: false };
+    for (var j = 0; j < DAYS().length; j++) {
+      if (!isClosed(DAYS()[j].day)) return { entry: DAYS()[j], exact: false };
     }
-    return { entry: DAYS[DAYS.length - 1], exact: false, allDone: true };
+    return { entry: DAYS()[DAYS().length - 1], exact: false, allDone: true };
   }
 
   function currentDayEntry() {
@@ -428,13 +476,13 @@
     var week = r.entry.week, day = r.entry.day;
     var ds = dst(day.id);
     var mode = dayMode(day);
-    var idx = DAYS.indexOf(r.entry);
+    var idx = DAYS().indexOf(r.entry);
     var h = '';
 
     if (r.allDone) {
       h += '<div class="card tight small warn muted">Все 65 дней закрыты. Дальше — «Красная зона» и «Отложено».</div>';
     } else if (!r.exact && !r.pinned) {
-      var t = todayISO(), first = dayDate(DAYS[0].day), last = dayDate(DAYS[DAYS.length - 1].day);
+      var t = todayISO(), first = dayDate(DAYS()[0].day), last = dayDate(DAYS()[DAYS().length - 1].day);
       var msg;
       if (STATE.flowMode) msg = 'Плавающий календарь: показан первый незакрытый день программы. Ничего не сгорает.';
       else if (t < first) msg = 'Программа стартует ' + humanDate(first) + '. Пока показан ближайший незавершённый день — можно начать раньше или сдвинуть старт в настройках.';
@@ -467,7 +515,7 @@
     h += '</div>';
     h += '<div class="navday">' +
       '<button class="btn" type="button" data-act="prevday" ' + (idx === 0 ? 'disabled' : '') + ' aria-label="Предыдущий день">←</button>' +
-      '<button class="btn" type="button" data-act="nextday" ' + (idx === DAYS.length - 1 ? 'disabled' : '') + ' aria-label="Следующий день">→</button>' +
+      '<button class="btn" type="button" data-act="nextday" ' + (idx === DAYS().length - 1 ? 'disabled' : '') + ' aria-label="Следующий день">→</button>' +
       '</div>';
     h += '</div>';
 
@@ -562,16 +610,16 @@
   function viewProgram() {
     var t = todayISO();
     var currentWeekId = null;
-    DAYS.forEach(function (e) { if (dayDate(e.day) === t) currentWeekId = e.week.id; });
+    DAYS().forEach(function (e) { if (dayDate(e.day) === t) currentWeekId = e.week.id; });
     if (!currentWeekId) {
-      for (var i = 0; i < DAYS.length; i++) {
-        if (!(STATE.days[DAYS[i].day.id] && STATE.days[DAYS[i].day.id].completedAt)) { currentWeekId = DAYS[i].week.id; break; }
+      for (var i = 0; i < DAYS().length; i++) {
+        if (!(STATE.days[DAYS()[i].day.id] && STATE.days[DAYS()[i].day.id].completedAt)) { currentWeekId = DAYS()[i].week.id; break; }
       }
     }
 
     var h = '<h1 class="page">Программа</h1><p class="sub">10 недель, 65 дней. Клик по дню открывает его на экране «Сегодня».</p>';
 
-    PROGRAM.weeks.forEach(function (w) {
+    activeWeeks().forEach(function (w) {
       var open = V.openWeeks[w.id];
       if (open === undefined) open = (w.id === currentWeekId);
       var done = 0, total = 0;
@@ -614,6 +662,7 @@
       if (v.conf !== 'red' && !(V.showYellow && v.conf === 'yellow')) return;
       var ref = ITEM_INDEX[id];
       if (!ref) return; // неизвестный itemId из старого состояния — молча игнорируем
+      if (!isActiveDay(ref.day)) return; // неделя скрыта из программы
       out.push({ id: id, conf: v.conf, ref: ref });
     });
     out.sort(function (a, b) { return a.ref.day.index - b.ref.day.index; });
@@ -715,7 +764,7 @@
   // ── экран «Поиск» ───────────────────────────────────────────────────────
 
   function viewSearch() {
-    var h = '<h1 class="page">Поиск</h1><p class="sub">По всем ' + ALL_ITEMS.length + ' пунктам программы. Результаты обновляются на лету.</p>';
+    var h = '<h1 class="page">Поиск</h1><p class="sub">По всем ' + activeItemCount() + ' пунктам программы. Результаты обновляются на лету.</p>';
     h += '<input class="searchbox" id="q" type="search" placeholder="например: StateFlow, idempotency, Compose…" ' +
       'value="' + esc(V.q) + '" autocomplete="off" spellcheck="false">';
     h += '<div id="results"></div>';
@@ -729,7 +778,10 @@
     }
     var hits = [];
     for (var i = 0; i < ALL_ITEMS.length && hits.length < 300; i++) {
-      if (ALL_ITEMS[i]._lc.indexOf(needle) >= 0) hits.push(ALL_ITEMS[i]);
+      if (ALL_ITEMS[i]._lc.indexOf(needle) < 0) continue;
+      var r = ITEM_INDEX[ALL_ITEMS[i].id];
+      if (r && !isActiveDay(r.day)) continue;
+      hits.push(ALL_ITEMS[i]);
     }
     if (!hits.length) return '<div class="card muted small" style="margin-top:14px">Ничего не найдено.</div>';
 
@@ -788,7 +840,7 @@
     var byType = {};
     var qTotal = 0;
 
-    PROGRAM.weeks.forEach(function (w) {
+    activeWeeks().forEach(function (w) {
       w.days.forEach(function (d) {
         d.tiers.forEach(function (t) {
           t.items.forEach(function (it) { tally(it); (it.children || []).forEach(tally); });
@@ -807,7 +859,7 @@
       }
     }
 
-    var end = isoAdd(STATE.startDate, DAYS.length);
+    var end = isoAdd(STATE.startDate, DAYS().length);
     var left = isoDiff(todayISO(), end);
     var streak = calcStreak();
 
@@ -825,12 +877,12 @@
     var fc = forecast();
     h += '<div class="card" style="margin-top:14px"><strong style="font-size:13.5px">Прогноз</strong>';
     h += '<div class="scrollx"><table class="tbl" style="margin-top:6px"><tbody>';
-    h += '<tr><td>дней программы закрыто</td><td class="n">' + fc.closed + ' / ' + DAYS.length + '</td></tr>';
+    h += '<tr><td>дней программы закрыто</td><td class="n">' + fc.closed + ' / ' + DAYS().length + '</td></tr>';
     h += '<tr><td>темп за последние 14 дней</td><td class="n">' +
       (fc.rate > 0 ? fc.rate.toFixed(2) + ' дня программы в день' : '—') + '</td></tr>';
     h += '<tr><td>финиш при этом темпе</td><td class="n">' +
       (fc.finish ? humanDate(fc.finish) : '—') + '</td></tr>';
-    h += '<tr><td>плановый финиш</td><td class="n">' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)) + '</td></tr>';
+    h += '<tr><td>плановый финиш</td><td class="n">' + humanDate(isoAdd(STATE.startDate, DAYS().length - 1)) + '</td></tr>';
     h += '<tr><td>' + (fc.lag !== null && fc.lag < 0 ? 'опережение плана' : 'отставание от плана') +
       '</td><td class="n">' + (fc.lag === null ? 'программа не начата'
         : Math.abs(fc.lag) + ' ' + plural(Math.abs(fc.lag), 'день', 'дня', 'дней')) + '</td></tr>';
@@ -839,7 +891,7 @@
     h += '</tbody></table></div></div>';
 
     h += '<div class="card"><strong style="font-size:13.5px">Прогресс по неделям</strong><div style="margin-top:8px">';
-    PROGRAM.weeks.forEach(function (w) {
+    activeWeeks().forEach(function (w) {
       var done = 0, total = 0;
       w.days.forEach(function (d) { var p = dayProgressAll(d); done += p.done; total += p.total; });
       var pct = total ? Math.round(done / total * 100) : 0;
@@ -903,14 +955,14 @@
   function forecast() {
     var closed = 0, recent = 0;
     var t = todayISO();
-    DAYS.forEach(function (e) {
+    DAYS().forEach(function (e) {
       var v = STATE.days[e.day.id];
       if (!v || !v.completedAt) return;
       closed++;
       var d = String(v.completedAt).slice(0, 10);
       if (isoDiff(d, t) >= 0 && isoDiff(d, t) < 14) recent++;
     });
-    var remaining = DAYS.length - closed;
+    var remaining = DAYS().length - closed;
     var rate = recent / 14;                       // дней программы за календарный день
     var out = { closed: closed, remaining: remaining, rate: rate, eta: null, finish: null, lag: null };
     if (rate > 0 && remaining > 0) {
@@ -922,7 +974,7 @@
     }
     // отставание: сколько дней программы должно было быть закрыто к сегодня по плану
     // Пока не закрыт ни один день, говорить об отставании нечестно — программа не начата.
-    var planned = Math.max(0, Math.min(DAYS.length, isoDiff(STATE.startDate, t) + 1));
+    var planned = Math.max(0, Math.min(DAYS().length, isoDiff(STATE.startDate, t) + 1));
     out.lag = closed > 0 ? planned - closed : null;
     return out;
   }
@@ -930,13 +982,13 @@
   /** Серия: сколько дней подряд закрыт хотя бы блок «20 мин». */
   function calcStreak() {
     var t = todayISO();
-    var i = DAYS.length - 1;
-    for (var k = 0; k < DAYS.length; k++) { if (dayDate(DAYS[k].day) > t) { i = k - 1; break; } }
+    var i = DAYS().length - 1;
+    for (var k = 0; k < DAYS().length; k++) { if (dayDate(DAYS()[k].day) > t) { i = k - 1; break; } }
     if (i < 0) return 0;
     var n = 0;
     // если сегодняшний день ещё не закрыт — считаем серию до вчерашнего
-    if (!minDone(DAYS[i].day)) i--;
-    while (i >= 0 && minDone(DAYS[i].day)) { n++; i--; }
+    if (!minDone(DAYS()[i].day)) i--;
+    while (i >= 0 && minDone(DAYS()[i].day)) { n++; i--; }
     return n;
   }
   function minDone(day) {
@@ -965,14 +1017,31 @@
       '<strong>Пт</strong> код, <strong>Сб</strong> большой блок, <strong>Вс</strong> behavioral и английский. ' +
       'Плановый старт — ' + rhythmWeekdayName() + '. Если начать в другой день недели, ритм сместится: ' +
       '«большой блок» и behavioral попадут на будни. ' +
-      (weekdayOf(STATE.startDate) === DAYS[0].day.weekday
+      (weekdayOf(STATE.startDate) === DAYS()[0].day.weekday
         ? 'Сейчас ритм совпадает с исходным.'
         : 'Сейчас ритм смещён: первый день приходится на ' + weekdayFull(weekdayOf(STATE.startDate)) + '.') +
       '</div>' +
       '<div class="hint">Все 65 дней пересчитываются от этой даты, структура недель сохраняется. ' +
-      'Сейчас программа идёт с ' + humanDate(STATE.startDate) + ' по ' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)) + '. ' +
+      'Сейчас программа идёт с ' + humanDate(STATE.startDate) + ' по ' + humanDate(isoAdd(STATE.startDate, DAYS().length - 1)) + '. ' +
       'Прогресс привязан к пунктам, а не к датам, и не теряется.</div>' +
       '</div></div>';
+
+    h += '<div class="card"><div class="field" style="margin-bottom:0">' +
+      '<label>Программа начинается с недели</label>' +
+      '<div class="chips" style="margin:0 0 4px">' +
+      PROGRAM.weeks.map(function (w) {
+        return '<button class="chip" type="button" data-act="startweek" data-week="' + w.number +
+          '" aria-pressed="' + (STATE.startWeek === w.number) + '" title="' + esc(w.title) + '">' +
+          w.number + '</button>';
+      }).join('') + '</div>' +
+      '<div class="hint">' + (STATE.startWeek > 0
+        ? (STATE.startWeek === 1 ? 'Неделя 0 скрыта' : 'Недели 0–' + (STATE.startWeek - 1) + ' скрыты') +
+          ': их нет ни в «Сегодня», ни в «Программе», ' +
+          'ни в поиске, ни в статистике, и не занимают дат. ' +
+          'Отметки по ним сохранены — вернуть можно в любой момент, нажав «0».'
+        : 'Показана вся программа, все 10 недель.') +
+      ' Сейчас первый день — <strong>' + esc(DAYS()[0].week.title) + ' · ' + esc(DAYS()[0].day.title) + '</strong>.' +
+      '</div></div></div>';
 
     h += '<div class="card"><div class="field">' +
       '<label>Норма дня — сколько нужно закрыть, чтобы день считался пройденным</label>' +
@@ -1038,6 +1107,7 @@
   function render() {
     document.documentElement.setAttribute('data-theme', STATE.settings.theme);
     renderNav();
+    renderFooter();
     var main = $('#main');
     var html;
     switch (V.name) {
@@ -1263,12 +1333,12 @@
     day: function (el) { V.dayId = el.getAttribute('data-id'); go('today'); },
 
     prevday: function () {
-      var i = DAYS.indexOf(currentDayEntry().entry);
-      if (i > 0) { V.dayId = DAYS[i - 1].day.id; window.scrollTo(0, 0); render(); }
+      var i = DAYS().indexOf(currentDayEntry().entry);
+      if (i > 0) { V.dayId = DAYS()[i - 1].day.id; window.scrollTo(0, 0); render(); }
     },
     nextday: function () {
-      var i = DAYS.indexOf(currentDayEntry().entry);
-      if (i < DAYS.length - 1) { V.dayId = DAYS[i + 1].day.id; window.scrollTo(0, 0); render(); }
+      var i = DAYS().indexOf(currentDayEntry().entry);
+      if (i < DAYS().length - 1) { V.dayId = DAYS()[i + 1].day.id; window.scrollTo(0, 0); render(); }
     },
 
     finish: function () {
@@ -1322,6 +1392,17 @@
       save(); render();
     },
 
+    startweek: function (el) {
+      var n = +el.getAttribute('data-week');
+      if (n === STATE.startWeek) return;
+      STATE.startWeek = n;
+      V.dayId = null; V.openWeeks = {}; V.openTiers = {}; V.random = null;
+      save(); render();
+      toast(n === 0 ? 'Показана вся программа с Недели 0'
+        : n === 1 ? 'Программа начинается с Недели 1; Неделя 0 скрыта'
+        : 'Программа начинается с Недели ' + n + '; недели 0–' + (n - 1) + ' скрыты');
+    },
+
     norm: function (el) {
       STATE.norm = +el.getAttribute('data-norm');
       save(); render();
@@ -1340,7 +1421,7 @@
       if (!input || !/^\d{4}-\d{2}-\d{2}$/.test(input.value)) { toast('Укажите корректную дату'); return; }
       STATE.startDate = input.value;
       save(); render();
-      toast('Даты пересчитаны: ' + humanDate(STATE.startDate) + ' — ' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)));
+      toast('Даты пересчитаны: ' + humanDate(STATE.startDate) + ' — ' + humanDate(isoAdd(STATE.startDate, DAYS().length - 1)));
     },
 
     startrhythm: function () {
@@ -1354,7 +1435,7 @@
       STATE.startDate = isoAdd(todayISO(), when);
       save(); render();
       toast('Старт программы: ' + humanDate(STATE.startDate) +
-        ' · финиш ' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)));
+        ' · финиш ' + humanDate(isoAdd(STATE.startDate, DAYS().length - 1)));
     },
 
     export: function () {
@@ -1488,5 +1569,5 @@
   render();
 
   console.log('Interview Prep Tracker · недель: ' + PROGRAM.weeks.length +
-    ', дней: ' + DAYS.length + ', пунктов: ' + ALL_ITEMS.length);
+    ', дней: ' + DAYS().length + ', пунктов: ' + ALL_ITEMS.length);
 })();
