@@ -10,11 +10,27 @@
   /**
    * Дата старта при первом запуске. Плановая дата зашита в программу и к моменту, когда
    * приложение реально открыли, обычно уже в прошлом — стартовать с неё значит встретить
-   * пользователя отставанием за дни, которых он не видел. Поэтому берём завтра.
+   * пользователя отставанием за дни, которых он не видел. Поэтому берём сегодняшний день.
    */
+  var WD_FULL = { 'Пн': 'понедельника', 'Вт': 'вторника', 'Ср': 'среды', 'Чт': 'четверга',
+    'Пт': 'пятницы', 'Сб': 'субботы', 'Вс': 'воскресенья' };
+  var WD_NOM = { 'Пн': 'понедельник', 'Вт': 'вторник', 'Ср': 'среда', 'Чт': 'четверг',
+    'Пт': 'пятница', 'Сб': 'суббота', 'Вс': 'воскресенье' };
+  function rhythmWeekdayName() { return WD_FULL[DAYS[0].day.weekday] || DAYS[0].day.weekday; }
+  function weekdayFull(wd) { return WD_NOM[wd] || wd; }
+  /** Ближайшая дата (сегодня или позже) с тем же днём недели, что у первого дня программы. */
+  function nextRhythmStart() {
+    var t = todayISO();
+    for (var i = 0; i < 7; i++) {
+      var d = isoAdd(t, i);
+      if (weekdayOf(d) === DAYS[0].day.weekday) return d;
+    }
+    return t;
+  }
+
   function defaultStart() {
     var t = todayISO();
-    return PLANNED_START > t ? PLANNED_START : isoAdd(t, 1);
+    return PLANNED_START > t ? PLANNED_START : t;
   }
 
   var TYPE_ICON = {
@@ -62,6 +78,13 @@
     var d = new Date();
     return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
   }
+  var WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+  /** День недели показанной даты. Из markdown брать нельзя: при сдвиге старта он врёт. */
+  function weekdayOf(iso) {
+    var p = iso.split('-');
+    return WEEKDAYS[new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay()];
+  }
+
   var MONTH_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
     'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
   function humanDate(iso) {
@@ -425,7 +448,11 @@
     h += '<div style="flex:1 1 auto;min-width:0">';
     h += '<div class="daymeta">';
     h += '<span class="pill">Неделя ' + week.number + '</span>';
-    h += '<span>' + esc(day.weekday) + ', ' + humanDate(dayDate(day)) + '</span>';
+    var realWd = weekdayOf(dayDate(day));
+    h += '<span>' + realWd + ', ' + humanDate(dayDate(day)) + '</span>';
+    if (realWd !== day.weekday) {
+      h += '<span class="faint" title="день недели по исходному плану программы">(по плану ' + esc(day.weekday) + ')</span>';
+    }
     var lag = isoDiff(dayDate(day), todayISO());
     if (STATE.flowMode && lag > 0 && !isClosed(day) && closedDaysCount() > 0) {
       h += '<span class="pill" style="color:var(--yellow);border-color:var(--yellow)">отставание ' +
@@ -565,7 +592,7 @@
         var pct = p.total ? Math.round(p.done / p.total * 100) : 0;
         var isToday = dayDate(d) === t;
         h += '<button class="dayrow' + (isToday ? ' today' : '') + '" type="button" data-act="day" data-id="' + d.id + '">' +
-          '<span class="wd">' + esc(d.weekday) + ' ' + dayDate(d).slice(8) + '.' + dayDate(d).slice(5, 7) + '</span>' +
+          '<span class="wd">' + weekdayOf(dayDate(d)) + ' ' + dayDate(d).slice(8) + '.' + dayDate(d).slice(5, 7) + '</span>' +
           '<span class="dt">' + esc(d.title) + (d.hot ? ' <span class="pill hot">🔥</span>' : '') +
           ((STATE.days[d.id] && STATE.days[d.id].completedAt) ? ' <span class="pill green">✓</span>' : '') + '</span>' +
           bar(p.done, p.total) +
@@ -677,7 +704,7 @@
             confBtn(it.id, 'green', 'g', '🟢') + '</span>';
         }
         h += '<button class="link" type="button" data-act="goto" data-id="' + it.id + '">Неделя ' + w.number +
-          ' · ' + esc(d.weekday) + ' ' + esc(d.title) + '</button>';
+          ' · ' + weekdayOf(dayDate(d)) + ' ' + esc(d.title) + '</button>';
         h += '</div></div>';
       });
       h += '</div>';
@@ -718,7 +745,7 @@
         '<span class="pill">' + esc(TYPE_LABEL[it.type] || it.type) + '</span>' +
         (dot ? '<span>' + dot + '</span>' : '') +
         '<button class="link" type="button" data-act="goto" data-id="' + it.id + '">Неделя ' + ref.week.number +
-        ' · ' + esc(ref.day.weekday) + ' ' + humanDate(dayDate(ref.day)).replace(/ \d{4}$/, '') + ' · ' + esc(ref.day.title) +
+        ' · ' + weekdayOf(dayDate(ref.day)) + ' ' + humanDate(dayDate(ref.day)).replace(/ \d{4}$/, '') + ' · ' + esc(ref.day.title) +
         '</button></div></div>';
     });
     return h;
@@ -932,6 +959,15 @@
       '<div class="row" style="margin-top:8px">' +
       '<button class="btn sm" type="button" data-act="startquick" data-when="0">Начать сегодня</button>' +
       '<button class="btn sm" type="button" data-act="startquick" data-when="1">Начать завтра</button>' +
+      '<button class="btn sm" type="button" data-act="startrhythm">Начать с ' + rhythmWeekdayName() + ' — сохранить ритм</button>' +
+      '</div>' +
+      '<div class="hint">Программа построена на ритме недели: <strong>Пн–Чт</strong> теория, ' +
+      '<strong>Пт</strong> код, <strong>Сб</strong> большой блок, <strong>Вс</strong> behavioral и английский. ' +
+      'Плановый старт — ' + rhythmWeekdayName() + '. Если начать в другой день недели, ритм сместится: ' +
+      '«большой блок» и behavioral попадут на будни. ' +
+      (weekdayOf(STATE.startDate) === DAYS[0].day.weekday
+        ? 'Сейчас ритм совпадает с исходным.'
+        : 'Сейчас ритм смещён: первый день приходится на ' + weekdayFull(weekdayOf(STATE.startDate)) + '.') +
       '</div>' +
       '<div class="hint">Все 65 дней пересчитываются от этой даты, структура недель сохраняется. ' +
       'Сейчас программа идёт с ' + humanDate(STATE.startDate) + ' по ' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)) + '. ' +
@@ -1305,6 +1341,12 @@
       STATE.startDate = input.value;
       save(); render();
       toast('Даты пересчитаны: ' + humanDate(STATE.startDate) + ' — ' + humanDate(isoAdd(STATE.startDate, DAYS.length - 1)));
+    },
+
+    startrhythm: function () {
+      STATE.startDate = nextRhythmStart();
+      save(); render();
+      toast('Старт: ' + humanDate(STATE.startDate) + ' — ритм недели программы сохранён');
     },
 
     startquick: function (el) {
