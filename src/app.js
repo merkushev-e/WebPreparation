@@ -4,7 +4,7 @@
   'use strict';
 
   var STORAGE_KEY = 'interview-prep-v1';
-  var STATE_VERSION = 2;
+  var STATE_VERSION = 3;
   var PLANNED_START = PROGRAM.start || '2026-08-01';
 
   /**
@@ -291,7 +291,10 @@
     if (raw.track === 'core' || raw.track === 'second' || raw.track === 'full') s.track = raw.track;
     if (['all', 'kill', 'A', 'AB'].indexOf(raw.minPriority) >= 0) s.minPriority = raw.minPriority;
     if (typeof raw.startWeek === 'number' && raw.startWeek >= 0 && raw.startWeek <= 20) s.startWeek = raw.startWeek | 0;
-    if ([0, 3, 6, 9].indexOf(raw.splitSize) >= 0) s.splitSize = raw.splitSize;
+    // Размер дня: сохранённое значение уважаем, но ровно один раз — при переходе на v3 —
+    // приводим его к новому умолчанию 3 (1+1+1). Иначе старое 6 из предыдущей версии
+    // навсегда перекрывает новое умолчание, и приложение показывает не то, что настроено в коде.
+    if ([0, 3, 6, 9].indexOf(raw.splitSize) >= 0 && (raw.version | 0) >= 3) s.splitSize = raw.splitSize;
     if (raw.norm === 20 || raw.norm === 60 || raw.norm === 120) s.norm = raw.norm;
     if (typeof raw.flowMode === 'boolean') s.flowMode = raw.flowMode;
     if (raw.items && typeof raw.items === 'object') {
