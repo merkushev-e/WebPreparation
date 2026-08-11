@@ -1,0 +1,2123 @@
+{
+  "id": "core",
+  "title": "Ядро",
+  "start": "2026-08-01",
+  "weeks": [
+    {
+      "id": "b1",
+      "number": 1,
+      "title": "Concurrency & Thread Safety",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b1-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Concurrency & Thread Safety",
+          "hot": false,
+          "timed": false,
+          "topic": "Concurrency & Thread Safety",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b1-q001",
+                  "type": "question",
+                  "text": "Define race condition, data race, deadlock, livelock and starvation. Give a concrete example of each.",
+                  "number": "1.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b1-q002",
+                  "type": "question",
+                  "text": "Two parallel requests withdraw money from the same account at the same time. Walk me through the race and fix it. *(прямая формулировка из отчётов о Revolut)*",
+                  "number": "1.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b1-q003",
+                  "type": "question",
+                  "text": "What does `@Volatile` guarantee — and what does it explicitly NOT guarantee?",
+                  "number": "1.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b1-q004",
+                  "type": "question",
+                  "text": "What is the happens-before relationship in the JMM? Give an example using `volatile`.",
+                  "number": "1.4",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b1-q005",
+                  "type": "question",
+                  "text": "`synchronized` vs `ReentrantLock` vs `Mutex` — trade-offs, and why you cannot use `synchronized` around a suspend call.",
+                  "number": "1.5",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b1-q006",
+                  "type": "question",
+                  "text": "How do you prevent deadlock in `transfer(from, to, amount)` between two accounts? *(lock ordering — проговори явно)*",
+                  "number": "1.6",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b1-q007",
+                  "type": "question",
+                  "text": "Optimistic vs pessimistic locking — model an account transfer with both. Which would you ship in a bank and why?",
+                  "number": "1.7",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b1-q008",
+                  "type": "question",
+                  "text": "What is CAS? How do `AtomicInteger` / `AtomicReference` use it, and when does CAS perform badly?",
+                  "number": "1.8",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b1-q009",
+                  "type": "question",
+                  "text": "Explain double-checked locking and why `volatile` is required for correctness.",
+                  "number": "1.9",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b1-q010",
+                  "type": "question",
+                  "text": "`ConcurrentHashMap` vs `Collections.synchronizedMap` — what is actually different?",
+                  "number": "1.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b1-q011",
+                  "type": "question",
+                  "text": "Why are unbounded thread pools dangerous? How do you size a pool for CPU-bound vs IO-bound work?",
+                  "number": "1.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b1-q012",
+                  "type": "question",
+                  "text": "Explain the Android main thread machinery: `Looper`, `MessageQueue`, `Handler`, `Choreographer`.",
+                  "number": "1.12",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "**Почему первый.** Это документированный фильтр Revolut. В отзывах кандидатов и в гайдах по процессу конкурентность названа отдельно как то, на чём отсеивают Java/Kotlin-кандидатов. У Monzo в system design грилят по concurrency / consistency / network faults. Ни один другой блок не даёт такой плотности отказов.\nУчить **до автоматизма** — не «знаю определение», а «пишу корректный код под таймером и вслух объясняю, почему он корректен»."
+        }
+      ]
+    },
+    {
+      "id": "b2",
+      "number": 2,
+      "title": "Live Coding / LLD",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b2-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Live Coding / LLD",
+          "hot": false,
+          "timed": false,
+          "topic": "Live Coding / LLD",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b2-q001",
+                  "type": "question",
+                  "text": "**Thread-safe in-memory account ledger**: `deposit`, `withdraw`, `transfer`. No deadlocks. With unit tests.",
+                  "number": "2.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b2-q002",
+                  "type": "question",
+                  "text": "**In-memory load balancer** with pluggable strategies (round-robin, weighted, least-connections) + register/unregister. Thread-safe.",
+                  "number": "2.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b2-q003",
+                  "type": "question",
+                  "text": "**Rate limiter** — implement fixed window, then sliding window, then token bucket. Thread-safe. *(named by Monzo candidates too)*",
+                  "number": "2.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b2-q004",
+                  "type": "question",
+                  "text": "**Currency conversion engine**: rate table, cross-rates, stale-rate handling.",
+                  "number": "2.4",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b2-q005",
+                  "type": "question",
+                  "text": "**LRU cache with TTL**, O(1), thread-safe.",
+                  "number": "2.5",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b2-q006",
+                  "type": "question",
+                  "text": "**Request deduplication cache**: same key → one in-flight call, all callers receive the result.",
+                  "number": "2.6",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b2-q007",
+                  "type": "question",
+                  "text": "**Fix a broken app.** You inherit a half-finished screen with crashes, a memory leak and unfinished design. Get it to spec inside the timebox, narrating trade-offs. *(буквально описанный сценарий Monzo take-home)*",
+                  "number": "2.7",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b2-q008",
+                  "type": "question",
+                  "text": "**Retry executor** with exponential backoff, jitter and cancellation.",
+                  "number": "2.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b2-q009",
+                  "type": "question",
+                  "text": "**Task scheduler** running at most N tasks concurrently, preserving submission order per key.",
+                  "number": "2.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b2-q010",
+                  "type": "question",
+                  "text": "Convert a callback-based repository to coroutines **without breaking existing callers**.",
+                  "number": "2.10",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "**Формат раунда:** 45–60 минут, 2–3 задачи подряд, свой IDE, часто без Copilot и без поиска. Требования: **работающий код + юнит-тесты + thread safety by default + SOLID**. Главная причина провала — кандидаты относятся к раунду как к спортивному программированию вместо инженерной задачи. Take-home без тестов у Revolut описывается как автоматический отказ.\n**Тренируй с таймером и вслух.** Работающее решение с тестами бьёт элегантное без тестов."
+        }
+      ],
+      "note": "**Правило для 2.7 и 2.10.** Monzo прямо просит уложиться в таймбокс и показать осознанные компромиссы, а не идеальное решение за выходные. На разборе решения нужно **защищать ключевые решения** и честно говорить, что сделал бы иначе при большем времени. Готовь эту формулировку заранее."
+    },
+    {
+      "id": "b3",
+      "number": 3,
+      "title": "Coroutines & Flow",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b3-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Coroutines & Flow",
+          "hot": false,
+          "timed": false,
+          "topic": "Coroutines & Flow",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b3-q001",
+                  "type": "question",
+                  "text": "What is a coroutine at the bytecode level? Explain CPS transformation and `Continuation`.",
+                  "number": "3.1",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q002",
+                  "type": "question",
+                  "text": "What is structured concurrency and what concrete problems does it eliminate?",
+                  "number": "3.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q003",
+                  "type": "question",
+                  "text": "`launch` vs `async` vs `withContext` — return type, exception behaviour, dispatch.",
+                  "number": "3.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q004",
+                  "type": "question",
+                  "text": "`Job` vs `SupervisorJob`; `coroutineScope {}` vs `supervisorScope {}` — how does exception propagation differ?",
+                  "number": "3.4",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q005",
+                  "type": "question",
+                  "text": "Why is cancellation cooperative, and what does that mean for your code?",
+                  "number": "3.5",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q006",
+                  "type": "question",
+                  "text": "How do you make a blocking third-party call cancellable?",
+                  "number": "3.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q007",
+                  "type": "question",
+                  "text": "How does `CoroutineExceptionHandler` work, and why doesn't it catch exceptions from `async`?",
+                  "number": "3.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q008",
+                  "type": "question",
+                  "text": "`Main` vs `Main.immediate` vs `Default` vs `IO` — thread pools, sizing, use cases. What problem does `limitedParallelism` solve?",
+                  "number": "3.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q009",
+                  "type": "question",
+                  "text": "What does \"main-safe suspend function\" mean, and whose responsibility is main-safety?",
+                  "number": "3.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q010",
+                  "type": "question",
+                  "text": "How do you inject dispatchers so the code stays testable?",
+                  "number": "3.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q011",
+                  "type": "question",
+                  "text": "`runBlocking` vs `runTest`; how does `runTest` handle virtual time and delay skipping?",
+                  "number": "3.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q012",
+                  "type": "question",
+                  "text": "Cold vs hot: `Flow`, `SharedFlow`, `StateFlow`, `Channel` — compare semantics.",
+                  "number": "3.12",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q013",
+                  "type": "question",
+                  "text": "What exactly does `SharingStarted.WhileSubscribed(5_000)` do, and why 5 seconds?",
+                  "number": "3.13",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q014",
+                  "type": "question",
+                  "text": "`map` vs `flatMapLatest` vs `flatMapMerge` vs `flatMapConcat` — a real use case for each.",
+                  "number": "3.14",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q015",
+                  "type": "question",
+                  "text": "`combine` vs `zip` — behaviour with different emission rates.",
+                  "number": "3.15",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q016",
+                  "type": "question",
+                  "text": "`collect` vs `collectLatest` — what exactly gets cancelled?",
+                  "number": "3.16",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q017",
+                  "type": "question",
+                  "text": "What does `flowOn` change, and why does it only affect upstream operators?",
+                  "number": "3.17",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q018",
+                  "type": "question",
+                  "text": "How do `callbackFlow` and `channelFlow` work, and why is `awaitClose` mandatory?",
+                  "number": "3.18",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q019",
+                  "type": "question",
+                  "text": "Wrap a callback-based API in `suspendCancellableCoroutine`. What must you handle?",
+                  "number": "3.19",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q020",
+                  "type": "question",
+                  "text": "`Mutex` vs `synchronized` — and how do you deduplicate in-flight requests so five simultaneous callers trigger one network call?",
+                  "number": "3.20",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q021",
+                  "type": "question",
+                  "text": "`repeatOnLifecycle` vs `flowWithLifecycle` vs `launchWhenStarted` — what is deprecated and why?",
+                  "number": "3.21",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q022",
+                  "type": "question",
+                  "text": "How do you test a Flow? Show the Turbine approach for a `SharedFlow`.",
+                  "number": "3.22",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q023",
+                  "type": "question",
+                  "text": "A network call is in flight when `onCleared()` is called. What happens to the coroutine? To the HTTP request? To the OkHttp thread?",
+                  "number": "3.23",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q024",
+                  "type": "question",
+                  "text": "Why doesn't `try { launch { throw ... } } catch (e: Exception) {}` catch anything?",
+                  "number": "3.24",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q025",
+                  "type": "question",
+                  "text": "`async {}` throws and you never call `await()`. Where does the exception go?",
+                  "number": "3.25",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q026",
+                  "type": "question",
+                  "text": "A parent is cancelled while a child is inside a `finally` block that calls a suspend function. What happens?",
+                  "number": "3.26",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q027",
+                  "type": "question",
+                  "text": "Name three concrete production failures caused by `GlobalScope.launch` inside a ViewModel.",
+                  "number": "3.27",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q028",
+                  "type": "question",
+                  "text": "Does marking a function `suspend` guarantee it won't block the main thread?",
+                  "number": "3.28",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q029",
+                  "type": "question",
+                  "text": "`while (true) { doWork() }` inside a coroutine — is it cancellable? How do you fix it?",
+                  "number": "3.29",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q030",
+                  "type": "question",
+                  "text": "`MutableStateFlow` is assigned an equal value twice. How many emissions do collectors see? Why?",
+                  "number": "3.30",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q031",
+                  "type": "question",
+                  "text": "`_state.value.items.add(newItem)` where `items` is a `MutableList` — does the UI update? Why not?",
+                  "number": "3.31",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q032",
+                  "type": "question",
+                  "text": "A navigation event is emitted into a `SharedFlow(replay = 0)` before the screen subscribes. What happens, and how do you fix it *properly*?",
+                  "number": "3.32",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q033",
+                  "type": "question",
+                  "text": "Two collectors subscribe to the same cold `Flow` from a Retrofit call. How many network requests fire?",
+                  "number": "3.33",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q034",
+                  "type": "question",
+                  "text": "An exception is thrown inside `collect {}`. Is upstream cancelled? Does `catch {}` intercept it? What changes if `catch {}` is placed before vs after `map {}`?",
+                  "number": "3.34",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q035",
+                  "type": "question",
+                  "text": "`stateIn` requires an initial value. What are the two standard ways to model \"nothing loaded yet\", and what's wrong with `null`?",
+                  "number": "3.35",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q036",
+                  "type": "question",
+                  "text": "Why is `StateFlow` a poor fit for one-off events (navigation, snackbar)? Walk through `Channel` vs `SharedFlow` vs state-driven event, and the lifecycle race in each. *(живой спор в комьюнити — сильный ответ обязателен для senior)*",
+                  "number": "3.36",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b3-q037",
+                  "type": "question",
+                  "text": "You're already on `Dispatchers.IO` and call `withContext(Dispatchers.IO)`. Does a thread switch happen?",
+                  "number": "3.37",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q038",
+                  "type": "question",
+                  "text": "`Dispatchers.IO` and `Dispatchers.Default` share threads. What does that imply for a CPU-heavy task launched on IO?",
+                  "number": "3.38",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q039",
+                  "type": "question",
+                  "text": "`WhileSubscribed(5000)` vs `Eagerly` vs `Lazily` — what does the user actually see on rotation for each?",
+                  "number": "3.39",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q040",
+                  "type": "question",
+                  "text": "`.flowOn(Dispatchers.IO)` placed after `.collect {}` — does it do anything? And `combine(a, b)` where `b` hasn't emitted yet — does downstream receive anything?",
+                  "number": "3.40",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q041",
+                  "type": "question",
+                  "text": "`distinctUntilChanged()` on a data class holding a `List` — does it reliably deduplicate?",
+                  "number": "3.41",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q042",
+                  "type": "question",
+                  "text": "`lifecycleScope.launch { flow.collect {} }` in `onCreate` — what exactly leaks, and when?",
+                  "number": "3.42",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "**Самый вероятный технический deep-dive для Android-роли** и одновременно топливо для блока 1. Разделено на теорию и gotcha-вопросы — вторые ценнее, там сеньоры и валятся."
+        }
+      ],
+      "note": "Формат: тебе дают сниппет и спрашивают «что выведется» / «что здесь баг». Это **самый ценный подраздел всего файла**: тут ты «знаешь тему», но отвечаешь неправильно."
+    },
+    {
+      "id": "b4",
+      "number": 4,
+      "title": "Защита своей архитектуры (раунд по ABM)",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b4-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Защита своей архитектуры (раунд по ABM)",
+          "hot": false,
+          "timed": false,
+          "topic": "Защита своей архитектуры (раунд по ABM)",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b4-q001",
+                  "type": "question",
+                  "text": "Walk me through the architecture of the app you work on. *(3 минуты, без бумажки, на английском)*",
+                  "number": "4.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b4-q002",
+                  "type": "question",
+                  "text": "Why is it structured that way? What would you change if you started today?",
+                  "number": "4.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b4-q003",
+                  "type": "question",
+                  "text": "**Someone looking at your app might say it's over-engineered. What would you say to that?** *(реально задавали на Monzo — это не троллинг, это проверка, умеешь ли обосновывать, а не оправдываться)*",
+                  "number": "4.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b4-q004",
+                  "type": "question",
+                  "text": "How many modules do you have, what is the actual build time, and what have you done about it?",
+                  "number": "4.4",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b4-q005",
+                  "type": "question",
+                  "text": "Which part of the codebase are you least happy with, and why haven't you fixed it?",
+                  "number": "4.5",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b4-q006",
+                  "type": "question",
+                  "text": "What's your test strategy, honestly — what is tested and what isn't?",
+                  "number": "4.6",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b4-q007",
+                  "type": "question",
+                  "text": "What's the hardest bug you've debugged there? Walk me through the investigation.",
+                  "number": "4.7",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b4-q008",
+                  "type": "question",
+                  "text": "Tell me about a big technical challenge you overcame, and how you influenced stakeholders around it. *(дословно то, что Monzo указывает как содержание первого звонка)*",
+                  "number": "4.8",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b4-q009",
+                  "type": "question",
+                  "text": "How do you handle a feature that touches four teams' modules?",
+                  "number": "4.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b4-q010",
+                  "type": "question",
+                  "text": "What does your release process look like, and what's the worst thing that ever shipped?",
+                  "number": "4.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b4-q011",
+                  "type": "question",
+                  "text": "If I gave you two weeks and no product work, what would you fix first?",
+                  "number": "4.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b4-q012",
+                  "type": "question",
+                  "text": "How is your app different from a non-banking app — what does the domain force you to do?",
+                  "number": "4.12",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "**Самый высокий ROI на час подготовки во всём файле.** Это отдельный раунд у Monzo (первый часовой звонок — разбор недавнего сложного проекта, кода не пишешь), у N26 (deep dive, где два senior-инженера заставляют защищать каждое решение), у Wise (разбор take-home). Ты уже знаешь материал — нужно только отрепетировать формулировки на английском.\n**Заготовь три истории по ABM**, каждая на 3 минуты, каждая с цифрами:\n1. Сложная фича с trade-offs.\n2. Инцидент/баг с расследованием.\n3. Архитектурное решение, которое продавил — или проиграл."
+        }
+      ]
+    },
+    {
+      "id": "b5",
+      "number": 5,
+      "title": "Architecture & Modularization",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b5-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Architecture & Modularization",
+          "hot": false,
+          "timed": false,
+          "topic": "Architecture & Modularization",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b5-q001",
+                  "type": "question",
+                  "text": "Single state class vs multiple flows for a screen — defend your choice. *(N26 отклонял take-home именно за отдельные потоки под error / loading / result)*",
+                  "number": "5.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b5-q002",
+                  "type": "question",
+                  "text": "How do you model loading / error / empty / content without a combinatorial explosion of states?",
+                  "number": "5.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b5-q003",
+                  "type": "question",
+                  "text": "MVVM vs MVI vs MVP — what do you actually gain from MVI, and what does it cost?",
+                  "number": "5.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b5-q004",
+                  "type": "question",
+                  "text": "Clean Architecture: what belongs in the domain layer? When is a UseCase layer just ceremony?",
+                  "number": "5.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b5-q005",
+                  "type": "question",
+                  "text": "Where do you map DTO → entity → domain → UI models, and why there?",
+                  "number": "5.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b5-q006",
+                  "type": "question",
+                  "text": "What problem does an `api`/`impl` module split solve, and how do you wire it with Hilt?",
+                  "number": "5.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b5-q007",
+                  "type": "question",
+                  "text": "How do you enforce module dependency rules mechanically rather than at code review?",
+                  "number": "5.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b5-q008",
+                  "type": "question",
+                  "text": "Hilt components and scopes, `@Binds` vs `@Provides`, multibindings — how do you provide a feature-scoped dependency?",
+                  "number": "5.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b5-q009",
+                  "type": "question",
+                  "text": "How do you structure navigation in a multi-module app so features don't depend on each other?",
+                  "number": "5.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b5-q010",
+                  "type": "question",
+                  "text": "How do you evolve a public module API without breaking 30 consumers?",
+                  "number": "5.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b5-q011",
+                  "type": "question",
+                  "text": "How would you incrementally migrate a legacy XML/MVP app to Compose/MVI without freezing the roadmap?",
+                  "number": "5.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b5-q012",
+                  "type": "question",
+                  "text": "How do you architect for feature flags, and how do you avoid flag debt?",
+                  "number": "5.12",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Твоя домашняя территория (ABM: multi-module, MVI, Hilt, api/impl, convention plugins). Держи ⭐⭐ там, где N26 реально резал кандидатов."
+        }
+      ]
+    },
+    {
+      "id": "b6",
+      "number": 6,
+      "title": "Mobile System Design",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b6-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Mobile System Design",
+          "hot": false,
+          "timed": false,
+          "topic": "Mobile System Design",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b6-q001",
+                  "type": "question",
+                  "text": "Design a transactions/statements screen covering ten years of history.",
+                  "number": "6.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b6-q002",
+                  "type": "question",
+                  "text": "Design a money transfer flow, including retries, idempotency and failure states.",
+                  "number": "6.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b6-q003",
+                  "type": "question",
+                  "text": "Design an offline-first sync engine: scheduling, backoff, conflicts, battery.",
+                  "number": "6.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b6-q004",
+                  "type": "question",
+                  "text": "Design a photo/video upload pipeline that survives process death. *(вариант: KYC onboarding с загрузкой документов и резюмируемыми шагами)*",
+                  "number": "6.4",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b6-q005",
+                  "type": "question",
+                  "text": "Design a chat app with offline support, read receipts and message ordering.",
+                  "number": "6.5",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b6-q006",
+                  "type": "question",
+                  "text": "Design an Instagram-style / ranked feed client.",
+                  "number": "6.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b6-q007",
+                  "type": "question",
+                  "text": "Design a multi-currency balance screen updating in real time over WebSocket: throttling, ordering, stale data.",
+                  "number": "6.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b6-q008",
+                  "type": "question",
+                  "text": "Design push notification handling: deduplication, deep links, foreground vs background.",
+                  "number": "6.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b6-q009",
+                  "type": "question",
+                  "text": "Design a client-side analytics SDK: batching, offline buffering, sampling, privacy.",
+                  "number": "6.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b6-q010",
+                  "type": "question",
+                  "text": "Design a feature-flag and remote-config client.",
+                  "number": "6.10",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "**Отдельный раунд у Monzo** (час, два мобильных инженера, виртуальная доска Excalidraw, кода не пишешь кроме моделей данных и интерфейсов). Тебе дают **UI-дизайн + начальные требования** и просят blueprint end-to-end реализации — такой, чтобы по нему можно было начать писать вместе. Оценивают: удержание общего понимания с интервьюером и проактивное снятие неоднозначности. У N26 и Bolt тоже отдельный system design раунд.\n**Важно:** в отчётах по Revolut отмечают, что в system design ценили **операционный workflow больше, чем красивую общую диаграмму**. Не рисуй схему — рассказывай, как это работает в проде. И почти всегда просят **и клиент, и контракт API** — не застревай в Android-слое."
+        }
+      ],
+      "framework": [
+        "**Clarify scope** — одна фича или всё приложение? Платформы? Офлайн нужен? Real-time или pull-to-refresh?",
+        "**Non-functional requirements** — latency, офлайн, батарея, память, безопасность, доступность, локализация.",
+        "**High-level client architecture** — слои, модули, поток данных.",
+        "**API contract & data model** — форма пагинации, размер payload, версионирование.",
+        "**Caching & sync** — single source of truth, инвалидация, разрешение конфликтов.",
+        "**Threading & concurrency** — что где выполняется, что отменяемо.",
+        "**Edge cases & failure modes** — нет сети, медленная сеть, process death, частичный отказ, clock skew.",
+        "**Observability** — метрики, логи, crash reporting, на что бы алертил.",
+        "**Testing & rollout** — как безопасно выкатить.",
+        "**Trade-offs и что сделал бы иначе на 10× масштабе.**"
+      ],
+      "frameworkTitle": "Каркас ответа"
+    },
+    {
+      "id": "b7",
+      "number": 7,
+      "title": "Data, Networking & Offline",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b7-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Data, Networking & Offline",
+          "hot": false,
+          "timed": false,
+          "topic": "Data, Networking & Offline",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b7-q001",
+                  "type": "question",
+                  "text": "What is idempotency, and why does a payment request need an idempotency key?",
+                  "number": "7.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b7-q002",
+                  "type": "question",
+                  "text": "How do you guarantee a \"send money\" action executes exactly once from the client's point of view?",
+                  "number": "7.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b7-q003",
+                  "type": "question",
+                  "text": "Implement token refresh when five parallel requests all return 401 simultaneously.",
+                  "number": "7.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b7-q004",
+                  "type": "question",
+                  "text": "Conflict resolution: last-write-wins, version vectors, server authority — which fits a bank and why?",
+                  "number": "7.4",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b7-q005",
+                  "type": "question",
+                  "text": "Design optimistic UI with rollback — first for a \"like\", then for a money transfer. What changes?",
+                  "number": "7.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b7-q006",
+                  "type": "question",
+                  "text": "OkHttp application vs network interceptors — where do auth, retry and logging belong?",
+                  "number": "7.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b7-q007",
+                  "type": "question",
+                  "text": "How do you map HTTP, network and parsing failures into a single domain error model?",
+                  "number": "7.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b7-q008",
+                  "type": "question",
+                  "text": "WebSocket vs SSE vs long polling vs FCM push — pick one for live balance updates and justify it.",
+                  "number": "7.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b7-q009",
+                  "type": "question",
+                  "text": "Cursor-based vs offset pagination — why does it matter for a transactions list?",
+                  "number": "7.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b7-q010",
+                  "type": "question",
+                  "text": "Room migrations: what happens when one is missing, and how do you test migrations?",
+                  "number": "7.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b7-q011",
+                  "type": "question",
+                  "text": "Certificate pinning bypasses the device trust store — what is the operational cost, and how do you avoid bricking the app on rotation?",
+                  "number": "7.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b7-q012",
+                  "type": "question",
+                  "text": "Encrypting local data: SQLCipher, `EncryptedSharedPreferences`, Keystore-backed keys — trade-offs.",
+                  "number": "7.12",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Это топливо для блока 6. Каждый вопрос отсюда — потенциальный follow-up в system design."
+        }
+      ]
+    },
+    {
+      "id": "b8",
+      "number": 8,
+      "title": "Jetpack Compose",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b8-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Jetpack Compose",
+          "hot": false,
+          "timed": false,
+          "topic": "Jetpack Compose",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b8-q001",
+                  "type": "question",
+                  "text": "Explain the three phases: composition, layout, drawing. Which phase should you avoid doing work in?",
+                  "number": "8.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b8-q002",
+                  "type": "question",
+                  "text": "What is a recompose scope, and why can a whole screen recompose because of one state read?",
+                  "number": "8.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b8-q003",
+                  "type": "question",
+                  "text": "**What is strong skipping mode and what changed?** Unstable параметры теперь сравниваются по instance equality (`===`), лямбды с unstable-захватами авто-мемоизируются, а большинство ручных `@Stable`/`@Immutable` стали мёртвым грузом — они нужны только там, где требуется сравнение по `equals()`. Знать это точно: тема свежая, и на ней ловят тех, кто выучил старые правила стабильности.",
+                  "number": "8.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b8-q004",
+                  "type": "question",
+                  "text": "How do you diagnose excessive recomposition? (Layout Inspector counts, compiler reports, composition tracing.)",
+                  "number": "8.4",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b8-q005",
+                  "type": "question",
+                  "text": "`@Stable` vs `@Immutable` — what is the contract, and what happens if you lie to the compiler?",
+                  "number": "8.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q006",
+                  "type": "question",
+                  "text": "`remember` vs `rememberSaveable` — what survives what? How do you write a custom `Saver`?",
+                  "number": "8.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q007",
+                  "type": "question",
+                  "text": "What problem does `derivedStateOf` solve, and what is the most common misuse? What's the defect if it's written without `remember`?",
+                  "number": "8.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q008",
+                  "type": "question",
+                  "text": "Give a use case for each: `LaunchedEffect`, `DisposableEffect`, `SideEffect`, `rememberCoroutineScope`, `rememberUpdatedState`, `snapshotFlow`.",
+                  "number": "8.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q009",
+                  "type": "question",
+                  "text": "`LaunchedEffect(Unit)` sits inside an `if (condition)` branch that toggles. How many times does the effect run?",
+                  "number": "8.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q010",
+                  "type": "question",
+                  "text": "`rememberCoroutineScope()` vs `LaunchedEffect` — give a case where the wrong one is a bug, not a style choice.",
+                  "number": "8.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q011",
+                  "type": "question",
+                  "text": "Why do `key`s matter in a `LazyColumn` for state and animation correctness? `mutableStateListOf` vs `mutableStateOf(listOf())`?",
+                  "number": "8.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q012",
+                  "type": "question",
+                  "text": "`LazyColumn` performance: keys, `contentType`, item stability, nested scrolling pitfalls.",
+                  "number": "8.12",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q013",
+                  "type": "question",
+                  "text": "What is a baseline profile, roughly what does it buy you on cold start, and how do you generate one?",
+                  "number": "8.13",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q014",
+                  "type": "question",
+                  "text": "State hoisting and UDF — how do you structure a screen with 20 interactive fields without a god-object state?",
+                  "number": "8.14",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q015",
+                  "type": "question",
+                  "text": "How does the Navigation Compose back stack work? What does Navigation 3 change conceptually (`NavKey`, `NavDisplay`, `SceneStrategy`, `EntryProvider`)? How do you scope a ViewModel to a nav graph or a single destination?",
+                  "number": "8.15",
+                  "priority": "high"
+                },
+                {
+                  "id": "b8-q016",
+                  "type": "question",
+                  "text": "Edge-to-edge is enforced now — how do you handle window insets, including IME insets, in Compose?",
+                  "number": "8.16",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Compose — уже не опция, а дефолт; интервьюеры на mid/senior спрашивают про него системно. Но глубина спроса ниже, чем по корутинам: тебя проверяют на понимание **рекомпозиции и стабильности**, а не на знание всех API."
+        }
+      ]
+    },
+    {
+      "id": "b9",
+      "number": 9,
+      "title": "ViewModel, Lifecycle & State",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b9-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "ViewModel, Lifecycle & State",
+          "hot": false,
+          "timed": false,
+          "topic": "ViewModel, Lifecycle & State",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b9-q001",
+                  "type": "question",
+                  "text": "Process death vs configuration change — how do they differ, and how do you *actually* test process death on a device?",
+                  "number": "9.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b9-q002",
+                  "type": "question",
+                  "text": "`onSaveInstanceState` vs `SavedStateHandle` vs `ViewModel` — what survives what? What can you put in `SavedStateHandle`, and what's the practical size limit?",
+                  "number": "9.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b9-q003",
+                  "type": "question",
+                  "text": "What happens to `viewModelScope` in `onCleared()`, and what does NOT get cancelled?",
+                  "number": "9.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b9-q004",
+                  "type": "question",
+                  "text": "Walk through the full Activity lifecycle on rotation. What changes with `android:configChanges`?",
+                  "number": "9.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b9-q005",
+                  "type": "question",
+                  "text": "What is the practical `Bundle` size limit, and how do you avoid `TransactionTooLargeException`?",
+                  "number": "9.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b9-q006",
+                  "type": "question",
+                  "text": "Is there ever a safe way for a ViewModel to hold a `Context`? Which `Context` types leak and why?",
+                  "number": "9.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b9-q007",
+                  "type": "question",
+                  "text": "Passing a screen argument into a ViewModel: assisted injection vs `SavedStateHandle` — when is each correct?",
+                  "number": "9.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b9-q008",
+                  "type": "question",
+                  "text": "A singleton holds an Activity `Context`. How long does the leak last, and what exactly is retained?",
+                  "number": "9.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b9-q009",
+                  "type": "question",
+                  "text": "LiveData vs StateFlow for a state holder — argue both sides, then pick one.",
+                  "number": "9.9",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Плотный gotcha-блок. Спрашивают почти везде, потому что дёшево проверить и хорошо разделяет middle от senior."
+        }
+      ]
+    },
+    {
+      "id": "b10",
+      "number": 10,
+      "title": "Testing",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b10-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Testing",
+          "hot": false,
+          "timed": false,
+          "topic": "Testing",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b10-q001",
+                  "type": "question",
+                  "text": "In a 60-minute live coding round with TDD, what do you write first and why?",
+                  "number": "10.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b10-q002",
+                  "type": "question",
+                  "text": "`StandardTestDispatcher` vs `UnconfinedTestDispatcher`, `advanceUntilIdle`, `runCurrent` — when does each matter?",
+                  "number": "10.2",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b10-q003",
+                  "type": "question",
+                  "text": "How do you make a ViewModel fully unit-testable?",
+                  "number": "10.3",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b10-q004",
+                  "type": "question",
+                  "text": "Mocks verify interactions, stubs return canned responses, fakes are simplified working implementations — when do you use each, and why do seniors lean towards fakes?",
+                  "number": "10.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b10-q005",
+                  "type": "question",
+                  "text": "How do you test a `SharedFlow` of one-off events with Turbine? And a state holder using `stateIn(WhileSubscribed)`?",
+                  "number": "10.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b10-q006",
+                  "type": "question",
+                  "text": "Describe your testing pyramid for a banking app, concretely.",
+                  "number": "10.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b10-q007",
+                  "type": "question",
+                  "text": "What makes UI tests flaky, and what are your five standard fixes?",
+                  "number": "10.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b10-q008",
+                  "type": "question",
+                  "text": "How do you test logic that depends on time, dates and timezones?",
+                  "number": "10.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b10-q009",
+                  "type": "question",
+                  "text": "What is your position on code coverage as a target metric?",
+                  "number": "10.9",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Не факультатив. У Revolut отправка take-home без тестов описывается как автоматический отказ; в live coding ждут юнит-тесты внутри таймбокса."
+        }
+      ]
+    },
+    {
+      "id": "b11",
+      "number": 11,
+      "title": "Performance & Diagnostics",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b11-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Performance & Diagnostics",
+          "hot": false,
+          "timed": false,
+          "topic": "Performance & Diagnostics",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b11-q001",
+                  "type": "question",
+                  "text": "Crash-free rate dropped from 99.8% to 99.1% overnight. Walk me through your response, minute by minute.",
+                  "number": "11.1",
+                  "priority": "kill"
+                },
+                {
+                  "id": "b11-q002",
+                  "type": "question",
+                  "text": "Walk through cold, warm and hot start. How do you measure startup properly (Macrobenchmark, `reportFullyDrawn`, Play Vitals)?",
+                  "number": "11.2",
+                  "priority": "high"
+                },
+                {
+                  "id": "b11-q003",
+                  "type": "question",
+                  "text": "Cold start regressed by 400 ms after a release. Walk me through finding the cause.",
+                  "number": "11.3",
+                  "priority": "high"
+                },
+                {
+                  "id": "b11-q004",
+                  "type": "question",
+                  "text": "What causes jank? Explain the frame lifecycle and the budget at 60 Hz vs 120 Hz. How do you diagnose jank with Perfetto?",
+                  "number": "11.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b11-q005",
+                  "type": "question",
+                  "text": "An ANR happens when the main thread is blocked too long — how does the system detect it, and how do you debug one from Play Console data alone?",
+                  "number": "11.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b11-q006",
+                  "type": "question",
+                  "text": "Memory leak vs memory churn vs fragmentation — how do the symptoms differ? How does LeakCanary detect a leak, and what are typical leak sources in a Compose codebase?",
+                  "number": "11.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b11-q007",
+                  "type": "question",
+                  "text": "How do you approach a performance issue you cannot reproduce locally?",
+                  "number": "11.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b11-q008",
+                  "type": "question",
+                  "text": "What does R8 actually do? How do you debug a crash that only reproduces in a minified release build?",
+                  "number": "11.8",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Твоя сильная зона — здесь нужны истории из ABM с цифрами, а не теория."
+        }
+      ]
+    },
+    {
+      "id": "b12",
+      "number": 12,
+      "title": "Kotlin & JVM",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b12-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Kotlin & JVM",
+          "hot": false,
+          "timed": false,
+          "topic": "Kotlin & JVM",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b12-q001",
+                  "type": "question",
+                  "text": "What does `inline` change in the generated bytecode, and when does inlining hurt? What problems do `noinline` and `crossinline` solve? Why does `reified` only work inside `inline`?",
+                  "number": "12.1",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q002",
+                  "type": "question",
+                  "text": "How are `equals`/`hashCode` generated for a `data class`? A `data class` with a `var` field is put in a `HashSet`, then the field is mutated — what happens on `contains()`?",
+                  "number": "12.2",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q003",
+                  "type": "question",
+                  "text": "`sealed class` vs `sealed interface` vs `enum` for UI state. What breaks at compile time vs runtime when you add a new subtype vs a new enum constant?",
+                  "number": "12.3",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q004",
+                  "type": "question",
+                  "text": "How does `by lazy` work internally? What are the three `LazyThreadSafetyMode` options? `lateinit` vs `by lazy` vs nullable — trade-offs.",
+                  "number": "12.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q005",
+                  "type": "question",
+                  "text": "What thread-safety guarantees does a Kotlin `object` give for its initialization, and how many instances exist in a multi-process app?",
+                  "number": "12.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q006",
+                  "type": "question",
+                  "text": "Explain declaration-site vs use-site variance (`in`, `out`, star projection) with an example from a repository API. What is type erasure and how do you work around it?",
+                  "number": "12.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q007",
+                  "type": "question",
+                  "text": "How would you model domain errors: exceptions, `Result`, or a sealed error type? Defend the choice.",
+                  "number": "12.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q008",
+                  "type": "question",
+                  "text": "What is a value class (`@JvmInline`)? When does it still get boxed at runtime?",
+                  "number": "12.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q009",
+                  "type": "question",
+                  "text": "`Sequence` vs `List` operator chains — when does `Sequence` actually win?",
+                  "number": "12.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q010",
+                  "type": "question",
+                  "text": "Complexity of `ArrayList` vs `LinkedList` vs `HashMap` for insert/lookup/delete — and when does `HashMap` degrade? What breaks if `equals` is implemented without `hashCode`?",
+                  "number": "12.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q011",
+                  "type": "question",
+                  "text": "Why are extension functions statically dispatched, and what surprising behaviour does that cause?",
+                  "number": "12.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b12-q012",
+                  "type": "question",
+                  "text": "Walk through SOLID, one letter at a time, with an example from a real codebase. Why \"composition over inheritance\", and when is inheritance still the right call?",
+                  "number": "12.12",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Базовый слой. Спрашивают на скрине и как follow-up внутри других блоков — редко как отдельный раунд. Поэтому все ⭐, ни одного ⭐⭐: провалить один такой вопрос обычно не фатально, но провалить пять подряд — фатально."
+        }
+      ]
+    },
+    {
+      "id": "b13",
+      "number": 13,
+      "title": "Android Platform",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b13-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Android Platform",
+          "hot": false,
+          "timed": false,
+          "topic": "Android Platform",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b13-q001",
+                  "type": "question",
+                  "text": "**Google Play requires targetSdk 36 for new apps and updates from 31 August 2026.** What breaks when you bump: edge-to-edge can no longer be opted out of, `onBackPressed()` stops firing, apps on screens 600dp+ can no longer lock orientation or aspect ratio, and 16 KB page-size support is required for native libraries. Walk me through how you'd plan and QA that migration. *(идеальный вопрос для «что ты сделал недавно» — подготовь ответ по ABM)*",
+                  "number": "13.1",
+                  "priority": "high"
+                },
+                {
+                  "id": "b13-q002",
+                  "type": "question",
+                  "text": "What is the predictive back gesture, and what does adding proper support to an existing app require?",
+                  "number": "13.2",
+                  "priority": "high"
+                },
+                {
+                  "id": "b13-q003",
+                  "type": "question",
+                  "text": "WorkManager vs Foreground Service vs AlarmManager vs JobScheduler — give a decision matrix. How does WorkManager guarantee execution across process death and reboot?",
+                  "number": "13.3",
+                  "priority": "high"
+                },
+                {
+                  "id": "b13-q004",
+                  "type": "question",
+                  "text": "What changed with mandatory foreground service types and restricted exact alarms? How do Doze mode and App Standby buckets affect a background sync feature?",
+                  "number": "13.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b13-q005",
+                  "type": "question",
+                  "text": "Deep links vs App Links — how do you verify an App Link, debug failed verification, and prevent deep link hijacking?",
+                  "number": "13.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b13-q006",
+                  "type": "question",
+                  "text": "Runtime permissions: one-time grants, `POST_NOTIFICATIONS`, the photo picker and partial media access. How does the current photo/video model differ from SDK 33?",
+                  "number": "13.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b13-q007",
+                  "type": "question",
+                  "text": "How does the system decide to kill your process? Explain `onTrimMemory` and importance levels.",
+                  "number": "13.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b13-q008",
+                  "type": "question",
+                  "text": "Trace the build pipeline: sources → dex → APK/AAB → install → ART. Where do AOT, JIT and profile-guided compilation fit?",
+                  "number": "13.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b13-q009",
+                  "type": "question",
+                  "text": "Explain Binder IPC. What happens when an `Intent` crosses a process boundary?",
+                  "number": "13.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b13-q010",
+                  "type": "question",
+                  "text": "How would you support a device with no Google Play Services in a banking app?",
+                  "number": "13.10",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Отобрано по принципу «спросят у senior в 2026», а не «есть в учебнике». Первый вопрос — новый, его не было в исходном банке: он актуален прямо сейчас."
+        }
+      ]
+    },
+    {
+      "id": "b14",
+      "number": 14,
+      "title": "Security (fintech)",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b14-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Security (fintech)",
+          "hot": false,
+          "timed": false,
+          "topic": "Security (fintech)",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b14-q001",
+                  "type": "question",
+                  "text": "Where do you store an auth token, and why not in SharedPreferences?",
+                  "number": "14.1",
+                  "priority": "high"
+                },
+                {
+                  "id": "b14-q002",
+                  "type": "question",
+                  "text": "The Android Keystore keeps keys inside the TEE or StrongBox — what guarantee do you actually get, and what do you *not*? What does hardware key attestation prove to your backend?",
+                  "number": "14.2",
+                  "priority": "high"
+                },
+                {
+                  "id": "b14-q003",
+                  "type": "question",
+                  "text": "`BiometricPrompt` with a `CryptoObject` — why does binding a key to biometrics matter?",
+                  "number": "14.3",
+                  "priority": "high"
+                },
+                {
+                  "id": "b14-q004",
+                  "type": "question",
+                  "text": "Pinning can be defeated by hooking on a rooted device — so what is the realistic role of root and hook detection?",
+                  "number": "14.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b14-q005",
+                  "type": "question",
+                  "text": "Walk through a pre-release security checklist: R8, HTTPS-only, `FLAG_SECURE`, `allowBackup`, exported components, no hardcoded secrets, dependency audit.",
+                  "number": "14.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b14-q006",
+                  "type": "question",
+                  "text": "Session management: idle timeout, step-up re-authentication, background screenshot blur.",
+                  "number": "14.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b14-q007",
+                  "type": "question",
+                  "text": "You're reviewing a PR that touches the payments flow. What specifically are you looking for?",
+                  "number": "14.7",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Не отдельный раунд, но всплывает в system design, в разборе твоего проекта и в вопросах про платёжный флоу. Держи семь заготовленных ответов."
+        }
+      ]
+    },
+    {
+      "id": "b15",
+      "number": 15,
+      "title": "Behavioral",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b15-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Behavioral",
+          "hot": false,
+          "timed": false,
+          "topic": "Behavioral",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b15-q001",
+                  "type": "question",
+                  "text": "Tell me about yourself. *(2 минуты, отрепетированные, без филлеров)*",
+                  "number": "15.1",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q002",
+                  "type": "question",
+                  "text": "**What were your key achievements and your low points in your last role?** *(прямая формулировка из плейбука Bar Raiser — будут копать на 2–3 слоя вглубь по каждому пункту)*",
+                  "number": "15.2",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q003",
+                  "type": "question",
+                  "text": "Walk me through the most complex feature you shipped end to end.",
+                  "number": "15.3",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q004",
+                  "type": "question",
+                  "text": "Tell me about a technical decision you later regretted.",
+                  "number": "15.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q005",
+                  "type": "question",
+                  "text": "Tell me about a time you disagreed with your manager or tech lead.",
+                  "number": "15.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q006",
+                  "type": "question",
+                  "text": "Tell me about a production incident you caused or fixed. What changed afterwards?",
+                  "number": "15.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q007",
+                  "type": "question",
+                  "text": "Tell me about delivering with unclear or shifting requirements.",
+                  "number": "15.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q008",
+                  "type": "question",
+                  "text": "Give an example of pushing back on scope or a deadline.",
+                  "number": "15.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q009",
+                  "type": "question",
+                  "text": "Describe convincing others to adopt an approach they initially resisted.",
+                  "number": "15.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q010",
+                  "type": "question",
+                  "text": "Tell me about the largest migration or refactor you led. How did you de-risk it?",
+                  "number": "15.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q011",
+                  "type": "question",
+                  "text": "Tell me about mentoring someone. What concretely changed for them?",
+                  "number": "15.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q012",
+                  "type": "question",
+                  "text": "Tell me about receiving hard feedback — and about a time you were wrong and a colleague was right.",
+                  "number": "15.12",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q013",
+                  "type": "question",
+                  "text": "Tell me about a metric you moved. How did you measure it?",
+                  "number": "15.13",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q014",
+                  "type": "question",
+                  "text": "How do you think about the trade-off between shipping speed, security and quality? *(N26 оценивает это по рубрике)*",
+                  "number": "15.14",
+                  "priority": "high"
+                },
+                {
+                  "id": "b15-q015",
+                  "type": "question",
+                  "text": "Why are you leaving your current role? Why this company? What does \"senior\" mean to you beyond writing code?",
+                  "number": "15.15",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "**Не недооценивай этот блок.** У Revolut Bar Raiser — часовой финальный раунд, отдельно сертифицированный интервьюер, который копает **на 2–3 слоя вглубь** по каждому достижению. По опубликованному плейбуку: ждут амбиции, честности, высокого темпа; готовности назвать слабости **с доказательством, что ты над ними работал**; количественных достижений. Тот же интервьюер потом делает reference call по тем же темам — расхождения между твоим рассказом и рефересами видны. Плюс сигнал считается плохим, если текущий работодатель не пытался тебя удержать.\nУ Monzo — час, два интервьюера, **четыре вопроса** про коммуникацию, обучение, работу в команде и доставку проектов; интервьюеры могут быть не мобильными, поэтому контекст объясняй с нуля. У N26 — оценка по рубрике trade-off между скоростью, безопасностью и качеством.\n**Правила:** говори «я», а не «мы» — иначе теряется сигнал о личном вкладе. Держи цифры: ответы без метрик читаются как отсутствие ownership. Шести–восьми историй хватает на всё."
+        }
+      ],
+      "note": "**Матрица покрытия.** Проверь, что 6–8 историй закрывают: ownership · conflict · failure · ambiguity · influence · mentorship · prioritization · delivery under pressure · incident response · cross-functional work."
+    },
+    {
+      "id": "b16",
+      "number": 16,
+      "title": "Algorithms",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b16-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Algorithms",
+          "hot": false,
+          "timed": false,
+          "topic": "Algorithms",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b16-q001",
+                  "type": "question",
+                  "text": "Merge Intervals / Meeting Rooms II — и **sweep line**: дан список интервалов доступности водителей, найди момент с максимальным числом доступных. *(реально названная задача с мобильного интервью)*",
+                  "number": "16.1",
+                  "priority": "high"
+                },
+                {
+                  "id": "b16-q002",
+                  "type": "question",
+                  "text": "LRU Cache *(пересекается с 2.5 — делай один раз, засчитывается в оба блока)*",
+                  "number": "16.2",
+                  "priority": "high"
+                },
+                {
+                  "id": "b16-q003",
+                  "type": "question",
+                  "text": "Top K Frequent Elements / Kth Largest *(heap)*",
+                  "number": "16.3",
+                  "priority": "high"
+                },
+                {
+                  "id": "b16-q004",
+                  "type": "question",
+                  "text": "Longest Substring Without Repeating Characters *(sliding window)*",
+                  "number": "16.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b16-q005",
+                  "type": "question",
+                  "text": "Two Sum / Group Anagrams *(hash map)*",
+                  "number": "16.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b16-q006",
+                  "type": "question",
+                  "text": "Binary Search: first/last occurrence + Search in Rotated Sorted Array",
+                  "number": "16.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b16-q007",
+                  "type": "question",
+                  "text": "Number of Islands + Binary Tree Level Order Traversal *(BFS/DFS)*",
+                  "number": "16.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b16-q008",
+                  "type": "question",
+                  "text": "Course Schedule *(topological sort)* + Coin Change *(базовый DP)*",
+                  "number": "16.8",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Нужны для Bolt (HackerRank, 1 ч 15, medium–hard, с живым интервьюером) и Big Tech, где мобильные роли оценивают как обычные SWE-позиции. Для европейского финтеха (Revolut, Monzo, N26, Wise) — вторично: там задачи привязаны к банковским сценариям, а не к головоломкам.\n**Минимум, а не программа-максимум:**"
+        }
+      ],
+      "note": "**Про сложность:** amortized analysis, hash collisions, когда O(n log n) практически лучше O(n), space-time trade-offs."
+    },
+    {
+      "id": "b17",
+      "number": 17,
+      "title": "English + вопросы интервьюеру",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b17-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "English + вопросы интервьюеру",
+          "hot": false,
+          "timed": false,
+          "topic": "English + вопросы интервьюеру",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b17-q001",
+                  "type": "question",
+                  "text": "A two-minute self-introduction, without filler.",
+                  "number": "17.1",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q002",
+                  "type": "question",
+                  "text": "A three-minute walkthrough of your app's architecture.",
+                  "number": "17.2",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q003",
+                  "type": "question",
+                  "text": "A three-minute bug-hunt story with a clear resolution.",
+                  "number": "17.3",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q004",
+                  "type": "question",
+                  "text": "Narrating code while writing it during live coding. *(отдельно тренируй — это неестественно)*",
+                  "number": "17.4",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q005",
+                  "type": "question",
+                  "text": "Asking for clarification: *\"Just to make sure I understand correctly — are you asking about X or Y?\"*",
+                  "number": "17.5",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q006",
+                  "type": "question",
+                  "text": "Buying time: *\"Let me think about that for a second.\"*",
+                  "number": "17.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q007",
+                  "type": "question",
+                  "text": "Disagreeing politely: *\"I see it differently, and here's why.\"*",
+                  "number": "17.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q008",
+                  "type": "question",
+                  "text": "Admitting a gap: *\"I haven't worked with that directly, but based on how X works, I'd expect…\"*",
+                  "number": "17.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q009",
+                  "type": "question",
+                  "text": "What does the mobile release process look like end to end, and how do compliance constraints affect it?",
+                  "number": "17.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q010",
+                  "type": "question",
+                  "text": "How is the codebase modularized, and who owns architecture decisions? What's the current crash-free rate?",
+                  "number": "17.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q011",
+                  "type": "question",
+                  "text": "What's the biggest source of friction for engineers right now, and how is time for tech debt allocated?",
+                  "number": "17.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b17-q012",
+                  "type": "question",
+                  "text": "What would a successful first 90 days look like? How is performance evaluated for senior ICs, and what's the path beyond senior?",
+                  "number": "17.12",
+                  "priority": "high"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Не отдельный раунд, но проверяется во всех. Отрабатывать **вслух**, с диктофоном."
+        }
+      ],
+      "note": "**Вопросы, которые задаёшь ты** (Monzo оставляет минимум 5 минут на это в *каждом* интервью — приходи с заготовками):"
+    }
+  ],
+  "stats": {
+    "blocks": 17,
+    "questions": 216,
+    "byPriority": {
+      "kill": 68,
+      "high": 148
+    }
+  }
+}

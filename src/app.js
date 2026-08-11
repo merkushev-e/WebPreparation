@@ -100,14 +100,22 @@
 
   // ── индексы по программе ────────────────────────────────────────────────
 
-  var ALL_DAYS = [];    // все 65 дней программы, [{week, day}] в хронологическом порядке
+  var TRACKS = {
+    core:   { id: 'core',   title: 'Ядро',          data: (typeof TRACK_DATA !== 'undefined' ? TRACK_DATA.core : null) },
+    second: { id: 'second', title: 'Вторая волна',  data: (typeof TRACK_DATA !== 'undefined' ? TRACK_DATA.second : null) },
+    full:   { id: 'full',   title: 'Полная программа', data: PROGRAM }
+  };
+  var SRC = PROGRAM;    // активный трек, переключается в «Настройках»
+
+  var ALL_DAYS = [];    // дни активного трека, [{week, day}]
   var DAY_BY_ID = {};
   var ITEM_INDEX = {};  // itemId → {item, day, week, tierIdx}
   var ALL_ITEMS = [];
   var TOPICS = [];
 
-  (function buildIndex() {
-    PROGRAM.weeks.forEach(function (w) {
+  function buildIndex() {
+    ALL_DAYS = []; DAY_BY_ID = {}; ITEM_INDEX = {}; ALL_ITEMS = []; TOPICS = [];
+    SRC.weeks.forEach(function (w) {
       w.days.forEach(function (d) {
         // одна и та же ссылка в обоих индексах — на ней держится DAYS().indexOf()
         var entry = { week: w, day: d };
@@ -128,7 +136,8 @@
       it._plain = plain(it.text) + (it.note ? ' ' + plain(it.note) : '');
       it._lc = it._plain.toLowerCase();
     }
-  })();
+    _days = null; _daysKey = '';
+  }
 
   /**
    * Дни программы пользователя. Две настройки меняют этот список:
@@ -139,7 +148,7 @@
   var _days = null, _daysKey = '', _itemDay = {};
 
   function DAYS() {
-    var key = (STATE.startWeek || 0) + ':' + (STATE.splitSize || 0);
+    var key = STATE.track + ':' + (STATE.minPriority || 'all') + ':' + (STATE.startWeek || 0) + ':' + (STATE.splitSize || 0);
     if (_daysKey !== key || !_days) { rebuildDays(); _daysKey = key; }
     return _days;
   }
@@ -163,10 +172,20 @@
   /** Режет день на части по `size` верхнеуровневых пунктов: size/3 в каждый из трёх блоков. */
   function sliceDay(entry, size) {
     var src = entry.day;
-    if (!size || !src.tiers.length) return [virtualDay(entry, src.tiers, 1, 1)];
+    if (!src.tiers.length) return [virtualDay(entry, src.tiers, 1, 1)];
+    if (!size) {
+      var all = [];
+      src.tiers.forEach(function (t) {
+        all.push({ level: t.level, items: t.items.filter(passesPriority) });
+      });
+      return all.some(function (t) { return t.items.length; }) ? [virtualDay(entry, all, 1, 1)] : [];
+    }
     var flat = [];
-    src.tiers.forEach(function (t) { t.items.forEach(function (it) { flat.push(it); }); });
-    if (flat.length <= size) return [virtualDay(entry, src.tiers, 1, 1)];
+    src.tiers.forEach(function (t) { t.items.forEach(function (it) { if (passesPriority(it)) flat.push(it); }); });
+    if (!flat.length) return [];
+    if (flat.length <= size) {
+      return [virtualDay(entry, [{ level: 20, items: flat }, { level: 40, items: [] }, { level: 60, items: [] }], 1, 1)];
+    }
 
     var per = Math.max(1, Math.round(size / 3));
     var parts = [], i = 0;
@@ -200,7 +219,9 @@
 
   function activeWeeks() {
     var from = STATE.startWeek || 0;
-    return PROGRAM.weeks.filter(function (w) { return w.number >= from; });
+    var ids = {};
+    DAYS().forEach(function (e) { ids[e.week.id] = true; });
+    return SRC.weeks.filter(function (w) { return w.number >= from && ids[w.id]; });
   }
   function isActiveDay(day) {
     var from = STATE.startWeek || 0;
@@ -210,6 +231,23 @@
   }
   /** Виртуальный день, в который попал пункт (после возможной перенарезки). */
   function dayOfItem(id) { DAYS(); return _itemDay[id] || null; }
+
+  /** Фильтр приоритета: пропускать ли пункт в программу. */
+  function passesPriority(it) {
+    var p = STATE.minPriority || 'all';
+    if (p === 'all' || !it.priority) return true;
+    if (p === 'kill') return it.priority === 'kill';
+    if (p === 'A') return it.priority === 'A';
+    if (p === 'AB') return it.priority === 'A' || it.priority === 'B';
+    return true;
+  }
+
+  function applyTrack() {
+    var t = TRACKS[STATE.track];
+    SRC = (t && t.data) ? t.data : PROGRAM;
+    if (STATE.track !== 'full' && STATE.startWeek > 1) STATE.startWeek = 1;
+    buildIndex();
+  }
 
   /** Все id пунктов дня в первых `n` блоках (n = null — все блоки). */
   function itemIdsOfDay(day, n) {
@@ -233,8 +271,10 @@
     return {
       version: STATE_VERSION,
       startDate: defaultStart(),
-      startWeek: 1,    // с какой недели начинается программа; Неделя 0 (калибровка) скрыта
-      splitSize: 6,    // резать дни по 6 верхнеуровневых пунктов (2+2+2); 0 — не резать
+      track: 'core',   // какой список вопросов проходим: ядро / вторая волна / полная программа
+      minPriority: 'all', // фильтр приоритета внутри трека
+      startWeek: 1,    // с какой недели/блока начинается программа
+      splitSize: 3,    // резать дни по 3 пункта (1+1+1); 0 — не резать
       norm: 60,        // норма дня: сколько блоков нужно закрыть, чтобы день считался пройденным
       flowMode: true,  // плавающий календарь: «Сегодня» = первый незакрытый день
       items: {},
@@ -248,8 +288,10 @@
     var s = emptyState();
     if (!raw || typeof raw !== 'object') return s;
     if (typeof raw.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.startDate)) s.startDate = raw.startDate;
-    if (typeof raw.startWeek === 'number' && raw.startWeek >= 0 && raw.startWeek <= 9) s.startWeek = raw.startWeek | 0;
-    if (raw.splitSize === 0 || raw.splitSize === 3 || raw.splitSize === 6 || raw.splitSize === 9) s.splitSize = raw.splitSize;
+    if (raw.track === 'core' || raw.track === 'second' || raw.track === 'full') s.track = raw.track;
+    if (['all', 'kill', 'A', 'AB'].indexOf(raw.minPriority) >= 0) s.minPriority = raw.minPriority;
+    if (typeof raw.startWeek === 'number' && raw.startWeek >= 0 && raw.startWeek <= 20) s.startWeek = raw.startWeek | 0;
+    if ([0, 3, 6, 9].indexOf(raw.splitSize) >= 0) s.splitSize = raw.splitSize;
     if (raw.norm === 20 || raw.norm === 60 || raw.norm === 120) s.norm = raw.norm;
     if (typeof raw.flowMode === 'boolean') s.flowMode = raw.flowMode;
     if (raw.items && typeof raw.items === 'object') {
@@ -477,9 +519,18 @@
     var h = '<div class="item' + (s.done ? ' is-done' : '') + '" data-item="' + it.id + '">';
     h += '<button class="chk" type="button" data-act="done" data-id="' + it.id + '"' +
       ' aria-pressed="' + s.done + '" title="Сделано" aria-label="Сделано">✓</button>';
-    h += '<span class="ic-type" aria-hidden="true" title="' + esc(TYPE_LABEL[it.type] || '') + '">' + icon + '</span>';
+    if (it.priority === 'kill') {
+      h += '<span class="ic-type" title="kill-вопрос: на нём режут">⭐⭐</span>';
+    } else if (it.priority && it.priority !== 'high') {
+      h += '<span class="ic-type faint" title="приоритет ' + it.priority + '">' + it.priority + '</span>';
+    } else {
+      h += '<span class="ic-type" aria-hidden="true" title="' + esc(TYPE_LABEL[it.type] || '') + '">' + icon + '</span>';
+    }
     h += '<span class="itext">';
-    if (opts.showNumber && it.number != null) h += '<span class="qnum">' + it.number + '.</span>';
+    if (opts.showNumber && it.number != null) {
+      // в отобранных списках номер уже вида «1.1» — вторая точка лишняя
+      h += '<span class="qnum">' + it.number + (String(it.number).indexOf('.') < 0 ? '.' : '') + '</span>';
+    }
     h += md(bodyText(it));
     if (it.note) h += '<span class="inote">' + md(it.note) + '</span>';
     if (it.children && it.children.length) {
@@ -564,19 +615,11 @@
     h += '<div class="dayhead">';
     h += '<div style="flex:1 1 auto;min-width:0">';
     h += '<div class="daymeta">';
-    h += '<span class="pill">Неделя ' + week.number + '</span>';
-    var planned = dayDate(day);
-    var lag = isoDiff(planned, todayISO());
-    var overdue = STATE.flowMode && lag > 0 && !isClosed(day);
-    var shown = overdue ? todayISO() : planned;   // просроченный день делается сегодня
+    h += '<span class="pill">' + (STATE.track === 'full' ? 'Неделя ' : 'Блок ') + week.number + '</span>';
+    // Дата — всегда сегодняшняя: работа идёт сегодня. Отставание не показываем сознательно:
+    // оно демотивирует, а темп всё равно виден в «Статистике».
+    var shown = STATE.flowMode ? todayISO() : dayDate(day);
     h += '<span>' + weekdayOf(shown) + ', ' + humanDate(shown) + '</span>';
-    if (overdue) {
-      h += '<span class="faint">план ' + humanDate(planned).replace(/ \d{4}$/, '') + '</span>';
-      h += '<span class="pill" style="color:var(--yellow);border-color:var(--yellow)">отставание ' +
-        lag + ' ' + plural(lag, 'день', 'дня', 'дней') + '</span>';
-    } else if (weekdayOf(shown) !== day.weekday) {
-      h += '<span class="faint" title="день недели по исходному плану программы">(по плану ' + esc(day.weekday) + ')</span>';
-    }
     h += '<span class="faint">·</span><span>' + esc(week.title) + '</span>';
     if (day.hot) h += '<span class="pill hot">🔥 критический</span>';
     if (day.timed) h += '<span class="pill">⏱ под таймер</span>';
@@ -701,7 +744,7 @@
       h += '<button class="weekhead" type="button" data-act="week" data-week="' + w.id + '" aria-expanded="' + open + '">';
       h += ring(done, total);
       h += '<span style="flex:1 1 auto;min-width:0">' +
-        '<span class="wtitle">Неделя ' + w.number + ' · ' + esc(w.title) + '</span>' +
+        '<span class="wtitle">' + (STATE.track === 'full' ? 'Неделя ' : 'Блок ') + w.number + ' · ' + esc(w.title) + '</span>' +
         '<div class="wmeta">' + esc(w.dateRange) + ' · ' + done + ' / ' + total + ' пунктов</div>' +
         (w.risk ? '<div class="wrisk">Риск: ' + md(w.risk) + '</div>' : '') +
         '</span>';
@@ -827,7 +870,7 @@
           h += '<span class="confs">' + confBtn(it.id, 'red', 'r', '🔴') + confBtn(it.id, 'yellow', 'y', '🟡') +
             confBtn(it.id, 'green', 'g', '🟢') + '</span>';
         }
-        h += '<button class="link" type="button" data-act="goto" data-id="' + it.id + '">Неделя ' + w.number +
+        h += '<button class="link" type="button" data-act="goto" data-id="' + it.id + '">' + (STATE.track === 'full' ? 'Неделя ' : 'Блок ') + w.number +
           ' · ' + weekdayOf(dayDate(d)) + ' ' + esc(d.title) + '</button>';
         h += '</div></div>';
       });
@@ -958,9 +1001,6 @@
     h += '<tr><td>финиш при этом темпе</td><td class="n">' +
       (fc.finish ? humanDate(fc.finish) : '—') + '</td></tr>';
     h += '<tr><td>плановый финиш</td><td class="n">' + humanDate(isoAdd(STATE.startDate, DAYS().length - 1)) + '</td></tr>';
-    h += '<tr><td>' + (fc.lag !== null && fc.lag < 0 ? 'опережение плана' : 'отставание от плана') +
-      '</td><td class="n">' + (fc.lag === null ? 'программа не начата'
-        : Math.abs(fc.lag) + ' ' + plural(Math.abs(fc.lag), 'день', 'дня', 'дней')) + '</td></tr>';
     h += '<tr><td>отложено на потом</td><td class="n">' + skippedCount() + ' ' +
       plural(skippedCount(), 'пункт', 'пункта', 'пунктов') + '</td></tr>';
     h += '</tbody></table></div></div>';
@@ -970,7 +1010,7 @@
       var done = 0, total = 0;
       w.days.forEach(function (d) { var p = dayProgressAll(d); done += p.done; total += p.total; });
       var pct = total ? Math.round(done / total * 100) : 0;
-      h += '<div class="wkbar"><span class="lbl">Неделя ' + w.number + '</span>' + bar(done, total) +
+      h += '<div class="wkbar"><span class="lbl">' + (STATE.track === 'full' ? 'Неделя ' : 'Блок ') + w.number + '</span>' + bar(done, total) +
         '<span class="pc">' + pct + '% · ' + done + '</span></div>';
     });
     h += '</div></div>';
@@ -1103,10 +1143,39 @@
       'Прогресс привязан к пунктам, а не к датам, и не теряется.</div>' +
       '</div></div>';
 
+    var trackInfo = { core: 'Отобранное ядро: 216 вопросов, из них 68 kill-вопросов ⭐⭐. Закрыть к концу октября.',
+      second: 'Вторая волна: 233 вопроса. Открывать, когда в ядре не осталось 🔴.',
+      full: 'Исходная девятинедельная программа: 65 дней, 445 вопросов, задачи и behavioral.' };
+    h += '<div class="card"><div class="field">' +
+      '<label>Какой список проходим</label>' +
+      '<div class="seg" role="group">' +
+      ['core', 'second', 'full'].map(function (k) {
+        return '<button type="button" data-act="track" data-track="' + k + '" aria-pressed="' +
+          (STATE.track === k) + '">' + TRACKS[k].title + '</button>';
+      }).join('') + '</div>' +
+      '<div class="hint">' + trackInfo[STATE.track] + '</div></div>';
+
+    if (STATE.track !== 'full') {
+      var opts = STATE.track === 'core'
+        ? [['all', 'все ⭐⭐ и ⭐'], ['kill', 'только ⭐⭐']]
+        : [['all', 'все A · B · C'], ['AB', 'A и B'], ['A', 'только A']];
+      h += '<div class="field" style="margin-bottom:0">' +
+        '<label>Приоритет вопросов</label>' +
+        '<div class="seg" role="group">' + opts.map(function (o) {
+          return '<button type="button" data-act="prio" data-prio="' + o[0] + '" aria-pressed="' +
+            (STATE.minPriority === o[0]) + '">' + o[1] + '</button>';
+        }).join('') + '</div>' +
+        '<div class="hint">Сейчас в программе <strong>' + activeItemCount() + '</strong> ' +
+        plural(activeItemCount(), 'вопрос', 'вопроса', 'вопросов') + '.' +
+        (STATE.track === 'core' ? ' Kill-вопросы ⭐⭐ — те, на которых режут: их держат первыми в очереди.' : '') +
+        '</div></div>';
+    }
+    h += '</div>';
+
     h += '<div class="card"><div class="field" style="margin-bottom:0">' +
-      '<label>Программа начинается с недели</label>' +
+      '<label>' + (STATE.track === 'full' ? 'Программа начинается с недели' : 'Программа начинается с блока') + '</label>' +
       '<div class="chips" style="margin:0 0 4px">' +
-      PROGRAM.weeks.map(function (w) {
+      SRC.weeks.map(function (w) {
         return '<button class="chip" type="button" data-act="startweek" data-week="' + w.number +
           '" aria-pressed="' + (STATE.startWeek === w.number) + '" title="' + esc(w.title) + '">' +
           w.number + '</button>';
@@ -1516,6 +1585,30 @@
         : 'Дни не режутся · программа заняла ' + d.length + ' ' + plural(d.length, 'день', 'дня', 'дней'));
     },
 
+    track: function (el) {
+      var t = el.getAttribute('data-track');
+      if (t === STATE.track) return;
+      STATE.track = t;
+      STATE.minPriority = 'all';
+      STATE.startWeek = t === 'full' ? 1 : 0;
+      V.dayId = null; V.openWeeks = {}; V.openTiers = {}; V.random = null;
+      applyTrack();
+      save(); render();
+      toast(TRACKS[t].title + ': ' + activeItemCount() + ' ' +
+        plural(activeItemCount(), 'вопрос', 'вопроса', 'вопросов') + ' · ' +
+        DAYS().length + ' ' + plural(DAYS().length, 'день', 'дня', 'дней'));
+    },
+
+    prio: function (el) {
+      STATE.minPriority = el.getAttribute('data-prio');
+      V.dayId = null; V.openTiers = {}; V.random = null;
+      _daysKey = '';
+      save(); render();
+      toast('В программе ' + activeItemCount() + ' ' +
+        plural(activeItemCount(), 'вопрос', 'вопроса', 'вопросов') + ' · ' +
+        DAYS().length + ' ' + plural(DAYS().length, 'день', 'дня', 'дней'));
+    },
+
     norm: function (el) {
       STATE.norm = +el.getAttribute('data-norm');
       save(); render();
@@ -1678,6 +1771,7 @@
   // ── старт ───────────────────────────────────────────────────────────────
 
   window.addEventListener('beforeunload', saveNow);
+  applyTrack();
   timerPaint();
   render();
 

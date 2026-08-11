@@ -4,7 +4,7 @@
   "private": true,
   "description": "Локальный трекер девятинедельной программы подготовки к собеседованиям. Один HTML-файл, открывается двойным кликом.",
   "scripts": {
-    "parse": "node scripts/parse.js",
+    "parse": "node scripts/parse.js && node scripts/parse-lists.js",
     "verify": "node scripts/verify.js",
     "build": "node scripts/build.js",
     "start": "npm run parse && npm run verify && npm run build"

@@ -28,6 +28,16 @@ if (!fs.existsSync(p('data', 'program.json'))) fail('нет data/program.json �
 const program = JSON.parse(fs.readFileSync(p('data', 'program.json'), 'utf8'));
 delete program.stats; // статистика парсера в приложении не нужна
 
+// отобранные списки вопросов — отдельные треки программы
+const extraTracks = {};
+for (const [key, file] of [['core', 'core.json'], ['second', 'second.json']]) {
+  const fp = p('data', file);
+  if (!fs.existsSync(fp)) fail(`нет data/${file} — сначала \`npm run parse\`.`);
+  const t = JSON.parse(fs.readFileSync(fp, 'utf8'));
+  delete t.stats;
+  extraTracks[key] = t;
+}
+
 const template = fs.readFileSync(p('src', 'template.html'), 'utf8');
 const styles = fs.readFileSync(p('src', 'styles.css'), 'utf8');
 const app = fs.readFileSync(p('src', 'app.js'), 'utf8');
@@ -54,7 +64,10 @@ const dataLiteral = 'var PROGRAM = ' + JSON.stringify(program)
   .replace(/</g, '\\u003c')
   .replace(/>/g, '\\u003e')
   .replace(/\u2028/g, '\\u2028')
-  .replace(/\u2029/g, '\\u2029') + ';';
+  .replace(/\u2029/g, '\\u2029') + ';\n' +
+  'var TRACK_DATA = ' + JSON.stringify(extraTracks)
+    .replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
+    .replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029') + ';';
 
 let html = template
   .replace('/*__STYLES__*/', () => styles.trim())

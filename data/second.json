@@ -1,0 +1,2261 @@
+{
+  "id": "second",
+  "title": "Вторая волна",
+  "start": "2026-08-01",
+  "weeks": [
+    {
+      "id": "b1",
+      "number": 1,
+      "title": "Coroutines & Flow — второй эшелон",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b1-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Coroutines & Flow — второй эшелон",
+          "hot": false,
+          "timed": false,
+          "topic": "Coroutines & Flow — второй эшелон",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b1-q001",
+                  "type": "question",
+                  "text": "What happens if you catch and swallow a `CancellationException`?",
+                  "number": "1.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b1-q002",
+                  "type": "question",
+                  "text": "What happens when an exception is thrown inside `launch` in a `viewModelScope`? Two coroutines are launched in the same scope, the first throws — what happens to the second, and to the scope?",
+                  "number": "1.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b1-q003",
+                  "type": "question",
+                  "text": "What is the difference between cancelling a `Job` and cancelling its `CoroutineScope`? Can you reuse the scope afterwards?",
+                  "number": "1.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b1-q004",
+                  "type": "question",
+                  "text": "`SharedFlow` parameters `replay`, `extraBufferCapacity`, `onBufferOverflow` — how do you configure a one-shot event stream? With `extraBufferCapacity = 0` and a slow collector, does `tryEmit` succeed?",
+                  "number": "1.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b1-q005",
+                  "type": "question",
+                  "text": "How does `StateFlow` conflate, and what bug does that cause with rapid emissions?",
+                  "number": "1.5",
+                  "priority": "A"
+                },
+                {
+                  "id": "b1-q006",
+                  "type": "question",
+                  "text": "`ensureActive()`, `isActive`, `yield()` — what does each actually do?",
+                  "number": "1.6",
+                  "priority": "A"
+                },
+                {
+                  "id": "b1-q007",
+                  "type": "question",
+                  "text": "When is `withContext(NonCancellable)` correct, what is the risk, and does it protect nested `launch` calls from cancellation?",
+                  "number": "1.7",
+                  "priority": "A"
+                },
+                {
+                  "id": "b1-q008",
+                  "type": "question",
+                  "text": "What is a suspension point, and what happens to the call stack when a coroutine suspends?",
+                  "number": "1.8",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q009",
+                  "type": "question",
+                  "text": "What are the elements of a `CoroutineContext` and how does `+` combine them? What does a scope do if you pass `Job() + Job() + Job()`?",
+                  "number": "1.9",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q010",
+                  "type": "question",
+                  "text": "`runBlocking { launch { println(\"A\") }; println(\"B\") }` — what's the output order and why?",
+                  "number": "1.10",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q011",
+                  "type": "question",
+                  "text": "You launch a coroutine in a ViewModel's `init {}` block and the screen is closed immediately. What happens?",
+                  "number": "1.11",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q012",
+                  "type": "question",
+                  "text": "`job.cancel()` followed immediately by reading a result — what's the race?",
+                  "number": "1.12",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q013",
+                  "type": "question",
+                  "text": "`buffer`, `conflate`, `debounce`, `sample`, `distinctUntilChanged` — semantics and pitfalls.",
+                  "number": "1.13",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q014",
+                  "type": "question",
+                  "text": "Fan-out semantics: how do multiple collectors behave on `SharedFlow` vs `Channel`?",
+                  "number": "1.14",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q015",
+                  "type": "question",
+                  "text": "What goes wrong if you call `stateIn(GlobalScope)`?",
+                  "number": "1.15",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q016",
+                  "type": "question",
+                  "text": "Implement retry with exponential backoff and jitter **over a Flow** (as opposed to a standalone executor).",
+                  "number": "1.16",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q017",
+                  "type": "question",
+                  "text": "How do you guarantee ordering when merging two flows that emit at different rates?",
+                  "number": "1.17",
+                  "priority": "B"
+                },
+                {
+                  "id": "b1-q018",
+                  "type": "question",
+                  "text": "How does backpressure in Flow differ from RxJava's model?",
+                  "number": "1.18",
+                  "priority": "C"
+                },
+                {
+                  "id": "b1-q019",
+                  "type": "question",
+                  "text": "`delay(1000)` inside `runTest` — how long does the test actually take, and why?",
+                  "number": "1.19",
+                  "priority": "C"
+                },
+                {
+                  "id": "b1-q020",
+                  "type": "question",
+                  "text": "`coroutineScope { launch { throw E } }` vs `supervisorScope { launch { throw E } }` — what exactly does the *caller* observe?",
+                  "number": "1.20",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Самый ценный блок Списка 2. Если бы ядро было чуть больше, первые пять пунктов были бы в нём."
+        }
+      ]
+    },
+    {
+      "id": "b2",
+      "number": 2,
+      "title": "Compose — внутренности и UI-инженерия",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b2-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Compose — внутренности и UI-инженерия",
+          "hot": false,
+          "timed": false,
+          "topic": "Compose — внутренности и UI-инженерия",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b2-q001",
+                  "type": "question",
+                  "text": "Interop: `AndroidView` and `ComposeView` — how do you migrate a large XML screen incrementally?",
+                  "number": "2.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b2-q002",
+                  "type": "question",
+                  "text": "How do you test Compose UI (`createComposeRule`, semantics, synchronization)?",
+                  "number": "2.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b2-q003",
+                  "type": "question",
+                  "text": "How would you build a design system on Compose — tokens, `CompositionLocal`, Material 3 theming? When is `CompositionLocal` appropriate, and why is it not dependency injection?",
+                  "number": "2.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b2-q004",
+                  "type": "question",
+                  "text": "`mutableStateOf` in the ViewModel vs `StateFlow` — trade-offs.",
+                  "number": "2.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b2-q005",
+                  "type": "question",
+                  "text": "Why do naive `TextField` implementations lag, and how do you fix input latency?",
+                  "number": "2.5",
+                  "priority": "A"
+                },
+                {
+                  "id": "b2-q006",
+                  "type": "question",
+                  "text": "What makes a type \"stable\"? How does the compiler infer stability? Why is `List<T>` treated as unstable, and what are your options now that strong skipping exists?",
+                  "number": "2.6",
+                  "priority": "A"
+                },
+                {
+                  "id": "b2-q007",
+                  "type": "question",
+                  "text": "`remember { }` without keys inside a `LazyColumn` item — what breaks when you scroll away and back?",
+                  "number": "2.7",
+                  "priority": "A"
+                },
+                {
+                  "id": "b2-q008",
+                  "type": "question",
+                  "text": "Reading a `State` inside a `Modifier.clickable { }` lambda vs in the composable body — which recomposes?",
+                  "number": "2.8",
+                  "priority": "A"
+                },
+                {
+                  "id": "b2-q009",
+                  "type": "question",
+                  "text": "Does changing an effect's key *always* restart the effect? Name the exception.",
+                  "number": "2.9",
+                  "priority": "B"
+                },
+                {
+                  "id": "b2-q010",
+                  "type": "question",
+                  "text": "What happens if you call a `@Composable` function inside `LaunchedEffect`?",
+                  "number": "2.10",
+                  "priority": "B"
+                },
+                {
+                  "id": "b2-q011",
+                  "type": "question",
+                  "text": "`LaunchedEffect(viewModel)` — is that a sensible key?",
+                  "number": "2.11",
+                  "priority": "B"
+                },
+                {
+                  "id": "b2-q012",
+                  "type": "question",
+                  "text": "What happens if `onDispose {}` inside a `DisposableEffect` throws?",
+                  "number": "2.12",
+                  "priority": "B"
+                },
+                {
+                  "id": "b2-q013",
+                  "type": "question",
+                  "text": "A `Modifier` chain is hoisted into a top-level `val` outside the composable. What's the effect on recomposition?",
+                  "number": "2.13",
+                  "priority": "B"
+                },
+                {
+                  "id": "b2-q014",
+                  "type": "question",
+                  "text": "What happens when you pass a capturing lambda to a composable, and how does `remember` change it?",
+                  "number": "2.14",
+                  "priority": "B"
+                },
+                {
+                  "id": "b2-q015",
+                  "type": "question",
+                  "text": "Why does `Modifier.padding().background()` differ from `background().padding()`?",
+                  "number": "2.15",
+                  "priority": "B"
+                },
+                {
+                  "id": "b2-q016",
+                  "type": "question",
+                  "text": "How do you animate without triggering recomposition (`graphicsLayer`, deferred state reads)?",
+                  "number": "2.16",
+                  "priority": "B"
+                },
+                {
+                  "id": "b2-q017",
+                  "type": "question",
+                  "text": "Your `LazyColumn` items animate incorrectly after a delete. What's the most likely cause?",
+                  "number": "2.17",
+                  "priority": "B"
+                },
+                {
+                  "id": "b2-q018",
+                  "type": "question",
+                  "text": "What does the Compose compiler do to a `@Composable` function — what are `$composer` and `$changed`?",
+                  "number": "2.18",
+                  "priority": "C"
+                },
+                {
+                  "id": "b2-q019",
+                  "type": "question",
+                  "text": "What is the slot table, and how does positional memoization determine composable identity?",
+                  "number": "2.19",
+                  "priority": "C"
+                },
+                {
+                  "id": "b2-q020",
+                  "type": "question",
+                  "text": "How does the snapshot state observation system decide which scopes to invalidate?",
+                  "number": "2.20",
+                  "priority": "C"
+                },
+                {
+                  "id": "b2-q021",
+                  "type": "question",
+                  "text": "How do you write a custom `Layout`? Explain the single-measurement rule.",
+                  "number": "2.21",
+                  "priority": "C"
+                },
+                {
+                  "id": "b2-q022",
+                  "type": "question",
+                  "text": "What is `SubcomposeLayout` and what does it cost?",
+                  "number": "2.22",
+                  "priority": "C"
+                },
+                {
+                  "id": "b2-q023",
+                  "type": "question",
+                  "text": "When do you need intrinsic measurements?",
+                  "number": "2.23",
+                  "priority": "C"
+                },
+                {
+                  "id": "b2-q024",
+                  "type": "question",
+                  "text": "A `ViewModel` obtained inside a `LazyColumn` item — what's the lifecycle, and why is it a bug?",
+                  "number": "2.24",
+                  "priority": "B"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Внутренности (слот-таблица, `$composer`) спрашивают реже, чем принято думать: интервьюеру важнее, умеешь ли ты чинить рекомпозицию, чем знаешь ли ты, как устроен компилятор. Но на deep-dive-раунде в компании с большим Compose-кодом — могут."
+        }
+      ]
+    },
+    {
+      "id": "b3",
+      "number": 3,
+      "title": "Kotlin & JVM — второй эшелон",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b3-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Kotlin & JVM — второй эшелон",
+          "hot": false,
+          "timed": false,
+          "topic": "Kotlin & JVM — второй эшелон",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b3-q001",
+                  "type": "question",
+                  "text": "`Serializable` vs `Parcelable` — performance, reflection, and when the difference actually matters.",
+                  "number": "3.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b3-q002",
+                  "type": "question",
+                  "text": "How do platform types work in Java interop, and where can an NPE still occur in \"null-safe\" Kotlin?",
+                  "number": "3.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b3-q003",
+                  "type": "question",
+                  "text": "`lateinit var` accessed before initialization — which exception, and how do you check safely?",
+                  "number": "3.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b3-q004",
+                  "type": "question",
+                  "text": "`==` vs `===` for two boxed `Int` values of 1000. What's printed, and why does 100 behave differently?",
+                  "number": "3.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b3-q005",
+                  "type": "question",
+                  "text": "How do Kotlin's `internal` and `public` map to JVM visibility, and why does that matter in a multi-module project?",
+                  "number": "3.5",
+                  "priority": "A"
+                },
+                {
+                  "id": "b3-q006",
+                  "type": "question",
+                  "text": "Abstraction vs encapsulation — explain the difference with an Android example.",
+                  "number": "3.6",
+                  "priority": "A"
+                },
+                {
+                  "id": "b3-q007",
+                  "type": "question",
+                  "text": "Explain the `equals`/`hashCode`/`compareTo` contracts and what breaks when they are inconsistent.",
+                  "number": "3.7",
+                  "priority": "A"
+                },
+                {
+                  "id": "b3-q008",
+                  "type": "question",
+                  "text": "Describe JVM/ART memory regions: heap, stack, metaspace. Where do Kotlin objects live?",
+                  "number": "3.8",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q009",
+                  "type": "question",
+                  "text": "How does generational garbage collection work on ART, and how does it differ from HotSpot?",
+                  "number": "3.9",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q010",
+                  "type": "question",
+                  "text": "Strong, weak, soft and phantom references — when have you actually needed a `WeakReference`?",
+                  "number": "3.10",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q011",
+                  "type": "question",
+                  "text": "How do delegated properties work under the hood (`getValue`, `setValue`, `provideDelegate`)?",
+                  "number": "3.11",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q012",
+                  "type": "question",
+                  "text": "What do `@JvmStatic`, `@JvmOverloads`, `@JvmField`, `@JvmName` change?",
+                  "number": "3.12",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q013",
+                  "type": "question",
+                  "text": "`const val` vs `val` — difference at compile time and for binary compatibility.",
+                  "number": "3.13",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q014",
+                  "type": "question",
+                  "text": "Is `listOf()` immutable? How does it differ from `kotlinx.collections.immutable`?",
+                  "number": "3.14",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q015",
+                  "type": "question",
+                  "text": "Why can't a `data class` cleanly participate in inheritance with `equals`?",
+                  "number": "3.15",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q016",
+                  "type": "question",
+                  "text": "`copy()` on a data class with a private constructor — what invariant can it break?",
+                  "number": "3.16",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q017",
+                  "type": "question",
+                  "text": "How would you design a generic, source-compatible public API for an `api` module consumed by 30 other modules?",
+                  "number": "3.17",
+                  "priority": "B"
+                },
+                {
+                  "id": "b3-q018",
+                  "type": "question",
+                  "text": "What are `expect`/`actual` declarations and how are they compiled in KMP?",
+                  "number": "3.18",
+                  "priority": "C"
+                },
+                {
+                  "id": "b3-q019",
+                  "type": "question",
+                  "text": "What practically changed for your project with the K2 compiler?",
+                  "number": "3.19",
+                  "priority": "C"
+                },
+                {
+                  "id": "b3-q020",
+                  "type": "question",
+                  "text": "What are context parameters / context receivers, and where would you use them?",
+                  "number": "3.20",
+                  "priority": "C"
+                },
+                {
+                  "id": "b3-q021",
+                  "type": "question",
+                  "text": "What is escape analysis, and why can't you rely on it on Android?",
+                  "number": "3.21",
+                  "priority": "C"
+                },
+                {
+                  "id": "b3-q022",
+                  "type": "question",
+                  "text": "What does `@Synchronized` compile to? What is a daemon thread?",
+                  "number": "3.22",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b4",
+      "number": 4,
+      "title": "Concurrency — второй эшелон",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b4-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Concurrency — второй эшелон",
+          "hot": false,
+          "timed": false,
+          "topic": "Concurrency — второй эшелон",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b4-q001",
+                  "type": "question",
+                  "text": "What is thread confinement, and how does it simplify concurrent state?",
+                  "number": "4.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b4-q002",
+                  "type": "question",
+                  "text": "`CountDownLatch`, `Semaphore`, `CyclicBarrier` — one real use case each.",
+                  "number": "4.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b4-q003",
+                  "type": "question",
+                  "text": "What is `ThreadLocal` and when have you legitimately needed one?",
+                  "number": "4.3",
+                  "priority": "B"
+                },
+                {
+                  "id": "b4-q004",
+                  "type": "question",
+                  "text": "How does `ReadWriteLock` help, and when does it make things worse?",
+                  "number": "4.4",
+                  "priority": "B"
+                },
+                {
+                  "id": "b4-q005",
+                  "type": "question",
+                  "text": "What is false sharing, and does it matter on mobile?",
+                  "number": "4.5",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Ядро закрывает 12 из 17 вопросов этой темы. Вот остальные."
+        }
+      ]
+    },
+    {
+      "id": "b5",
+      "number": 5,
+      "title": "Android Platform",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b5-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Android Platform",
+          "hot": false,
+          "timed": false,
+          "topic": "Android Platform",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b5-q001",
+                  "type": "question",
+                  "text": "Configuration changes beyond rotation: locale, dark mode, font scale, density. What typically breaks?",
+                  "number": "5.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b5-q002",
+                  "type": "question",
+                  "text": "What is a `PendingIntent`, and why is mutability now explicit?",
+                  "number": "5.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b5-q003",
+                  "type": "question",
+                  "text": "Accessibility: what does a senior engineer owe here (TalkBack, touch targets, semantics in Compose)?",
+                  "number": "5.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b5-q004",
+                  "type": "question",
+                  "text": "What is StrictMode and what would you enable in a debug build?",
+                  "number": "5.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b5-q005",
+                  "type": "question",
+                  "text": "Explicit vs implicit intents, and what changed with package visibility on Android 11+.",
+                  "number": "5.5",
+                  "priority": "B"
+                },
+                {
+                  "id": "b5-q006",
+                  "type": "question",
+                  "text": "Launch modes and task affinity — when do you genuinely need `singleTop` or `singleTask`?",
+                  "number": "5.6",
+                  "priority": "B"
+                },
+                {
+                  "id": "b5-q007",
+                  "type": "question",
+                  "text": "Multi-window and desktop windowing — which assumptions in a typical app break? *(поднимается до **A**, если целишься в компанию с планшетным/foldable трафиком: с targetSdk 36 на экранах 600dp+ блокировки ориентации игнорируются)*",
+                  "number": "5.7",
+                  "priority": "B"
+                },
+                {
+                  "id": "b5-q008",
+                  "type": "question",
+                  "text": "Where should keep rules live for a library module, and why?",
+                  "number": "5.8",
+                  "priority": "B"
+                },
+                {
+                  "id": "b5-q009",
+                  "type": "question",
+                  "text": "App Bundles, dynamic feature modules and Play Feature Delivery — trade-offs.",
+                  "number": "5.9",
+                  "priority": "B"
+                },
+                {
+                  "id": "b5-q010",
+                  "type": "question",
+                  "text": "Notification channels and importance — what control does the user actually have?",
+                  "number": "5.10",
+                  "priority": "B"
+                },
+                {
+                  "id": "b5-q011",
+                  "type": "question",
+                  "text": "Why does the Jetpack Startup library exist, and what problem with `ContentProvider` initialization does it fix?",
+                  "number": "5.11",
+                  "priority": "C"
+                },
+                {
+                  "id": "b5-q012",
+                  "type": "question",
+                  "text": "Per-app language (Android 13+) — how is it implemented and what are the gotchas?",
+                  "number": "5.12",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b6",
+      "number": 6,
+      "title": "Architecture & Modularization",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b6-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Architecture & Modularization",
+          "hot": false,
+          "timed": false,
+          "topic": "Architecture & Modularization",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b6-q001",
+                  "type": "question",
+                  "text": "What goes into a Gradle convention plugin, and how do version catalogs scale to 100 modules?",
+                  "number": "6.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b6-q002",
+                  "type": "question",
+                  "text": "How do you run a monolith → modular migration with eight engineers shipping in parallel?",
+                  "number": "6.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b6-q003",
+                  "type": "question",
+                  "text": "A feature needs data owned by three other features. How do you avoid coupling them?",
+                  "number": "6.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b6-q004",
+                  "type": "question",
+                  "text": "Repository pattern: what does it own, and what should never live there?",
+                  "number": "6.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b6-q005",
+                  "type": "question",
+                  "text": "Hilt vs Koin vs manual DI — argue for one in a 100-module banking app.",
+                  "number": "6.5",
+                  "priority": "A"
+                },
+                {
+                  "id": "b6-q006",
+                  "type": "question",
+                  "text": "How do you detect and break a circular module dependency?",
+                  "number": "6.6",
+                  "priority": "B"
+                },
+                {
+                  "id": "b6-q007",
+                  "type": "question",
+                  "text": "How does Hilt handle a multi-module graph, and what is the compile-time cost?",
+                  "number": "6.7",
+                  "priority": "B"
+                },
+                {
+                  "id": "b6-q008",
+                  "type": "question",
+                  "text": "How do you inject into classes you don't construct (`Worker`, `ContentProvider`, `BroadcastReceiver`)?",
+                  "number": "6.8",
+                  "priority": "B"
+                },
+                {
+                  "id": "b6-q009",
+                  "type": "question",
+                  "text": "What is an ADR, and how do you drive an architecture decision across a team that disagrees?",
+                  "number": "6.9",
+                  "priority": "B"
+                },
+                {
+                  "id": "b6-q010",
+                  "type": "question",
+                  "text": "How would you design a design-system module consumed by 15 teams, including a deprecation policy?",
+                  "number": "6.10",
+                  "priority": "B"
+                },
+                {
+                  "id": "b6-q011",
+                  "type": "question",
+                  "text": "Dynamic feature modules vs regular feature modules — trade-offs.",
+                  "number": "6.11",
+                  "priority": "C"
+                },
+                {
+                  "id": "b6-q012",
+                  "type": "question",
+                  "text": "What are the honest trade-offs of KMP for shared business logic in a banking app?",
+                  "number": "6.12",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b7",
+      "number": 7,
+      "title": "Data, Networking & Offline",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b7-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Data, Networking & Offline",
+          "hot": false,
+          "timed": false,
+          "topic": "Data, Networking & Offline",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b7-q001",
+                  "type": "question",
+                  "text": "Draw the data flow for Paging 3 with `RemoteMediator`.",
+                  "number": "7.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b7-q002",
+                  "type": "question",
+                  "text": "DataStore vs SharedPreferences — why is DataStore async, and how do you migrate safely?",
+                  "number": "7.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b7-q003",
+                  "type": "question",
+                  "text": "Image loading: Coil vs Glide, cache tiers, and what to do about OOM on an image-heavy feed.",
+                  "number": "7.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b7-q004",
+                  "type": "question",
+                  "text": "Design an offline-first sync layer in detail. What are its failure modes? *(расширение вопроса 6.3 из Списка 1)*",
+                  "number": "7.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b7-q005",
+                  "type": "question",
+                  "text": "How does Room's invalidation tracker work with Flow, and what does it cost?",
+                  "number": "7.5",
+                  "priority": "B"
+                },
+                {
+                  "id": "b7-q006",
+                  "type": "question",
+                  "text": "HTTP caching with ETag and `Cache-Control` — when do you roll your own cache instead?",
+                  "number": "7.6",
+                  "priority": "B"
+                },
+                {
+                  "id": "b7-q007",
+                  "type": "question",
+                  "text": "How do you make a large file upload survive process death? *(расширение 6.4)*",
+                  "number": "7.7",
+                  "priority": "B"
+                },
+                {
+                  "id": "b7-q008",
+                  "type": "question",
+                  "text": "Design a client-side analytics pipeline with batching, offline buffering and sampling. *(расширение 6.9)*",
+                  "number": "7.8",
+                  "priority": "B"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b8",
+      "number": 8,
+      "title": "Performance & Memory",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b8-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Performance & Memory",
+          "hot": false,
+          "timed": false,
+          "topic": "Performance & Memory",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b8-q001",
+                  "type": "question",
+                  "text": "Which disk/IO operations typically sneak onto the main thread in a real app?",
+                  "number": "8.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b8-q002",
+                  "type": "question",
+                  "text": "Baseline profiles vs startup profiles — what does each do?",
+                  "number": "8.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b8-q003",
+                  "type": "question",
+                  "text": "How do you reduce APK/AAB size? Give five concrete levers.",
+                  "number": "8.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b8-q004",
+                  "type": "question",
+                  "text": "Which metrics belong on a mobile performance dashboard, and which of them gate a release?",
+                  "number": "8.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b8-q005",
+                  "type": "question",
+                  "text": "Given a heap dump, how do you prove which reference chain retains an Activity?",
+                  "number": "8.5",
+                  "priority": "B"
+                },
+                {
+                  "id": "b8-q006",
+                  "type": "question",
+                  "text": "How much RAM does a 4000×3000 photo cost as a Bitmap, and how do you avoid paying it?",
+                  "number": "8.6",
+                  "priority": "B"
+                },
+                {
+                  "id": "b8-q007",
+                  "type": "question",
+                  "text": "How do you profile and reduce battery drain caused by a sync feature?",
+                  "number": "8.7",
+                  "priority": "B"
+                },
+                {
+                  "id": "b8-q008",
+                  "type": "question",
+                  "text": "How do you find and fix over-recomposition in *production* code (not in a sample)?",
+                  "number": "8.8",
+                  "priority": "B"
+                },
+                {
+                  "id": "b8-q009",
+                  "type": "question",
+                  "text": "AOT vs JIT vs profile-guided compilation on ART — what does each buy you?",
+                  "number": "8.9",
+                  "priority": "B"
+                },
+                {
+                  "id": "b8-q010",
+                  "type": "question",
+                  "text": "How would you cut a six-minute incremental build to under one minute?",
+                  "number": "8.10",
+                  "priority": "B"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b9",
+      "number": 9,
+      "title": "Testing",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b9-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Testing",
+          "hot": false,
+          "timed": false,
+          "topic": "Testing",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b9-q001",
+                  "type": "question",
+                  "text": "Robolectric vs instrumented tests — where do you draw the line?",
+                  "number": "9.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b9-q002",
+                  "type": "question",
+                  "text": "How do you test a feature module in isolation from the rest of a 100-module app?",
+                  "number": "9.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b9-q003",
+                  "type": "question",
+                  "text": "Screenshot testing: what does it catch, and what does it cost to maintain?",
+                  "number": "9.3",
+                  "priority": "B"
+                },
+                {
+                  "id": "b9-q004",
+                  "type": "question",
+                  "text": "Is contract testing between mobile and backend worth it? Defend your answer.",
+                  "number": "9.4",
+                  "priority": "B"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b10",
+      "number": 10,
+      "title": "Build, CI/CD & Release Engineering",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b10-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Build, CI/CD & Release Engineering",
+          "hot": false,
+          "timed": false,
+          "topic": "Build, CI/CD & Release Engineering",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b10-q001",
+                  "type": "question",
+                  "text": "Staged rollout, kill switches, forced upgrade — how do you halt a bad release? A critical bug is found when the release is 30% rolled out. What do you do?",
+                  "number": "10.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b10-q002",
+                  "type": "question",
+                  "text": "How do you diagnose a slow build (build scans, `--profile`, task-level timing)? How do you keep CI under 15 minutes for a large app?",
+                  "number": "10.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b10-q003",
+                  "type": "question",
+                  "text": "How do you set up crash reporting, symbolication and alerting so on-call is actually actionable?",
+                  "number": "10.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b10-q004",
+                  "type": "question",
+                  "text": "How do you make code review scale (PR size limits, ownership, automated checks)?",
+                  "number": "10.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b10-q005",
+                  "type": "question",
+                  "text": "Configuration cache vs build cache vs incremental compilation — what does each actually skip?",
+                  "number": "10.5",
+                  "priority": "B"
+                },
+                {
+                  "id": "b10-q006",
+                  "type": "question",
+                  "text": "Why does moving from KAPT to KSP matter for build times?",
+                  "number": "10.6",
+                  "priority": "B"
+                },
+                {
+                  "id": "b10-q007",
+                  "type": "question",
+                  "text": "Product flavors vs build types vs source sets — how do you structure dev/staging/prod?",
+                  "number": "10.7",
+                  "priority": "B"
+                },
+                {
+                  "id": "b10-q008",
+                  "type": "question",
+                  "text": "Trunk-based development vs GitFlow for a mobile app with two-week release trains.",
+                  "number": "10.8",
+                  "priority": "B"
+                },
+                {
+                  "id": "b10-q009",
+                  "type": "question",
+                  "text": "What is your dependency-update policy in a regulated app?",
+                  "number": "10.9",
+                  "priority": "B"
+                },
+                {
+                  "id": "b10-q010",
+                  "type": "question",
+                  "text": "Signing, Play App Signing, and secrets management in CI.",
+                  "number": "10.10",
+                  "priority": "B"
+                },
+                {
+                  "id": "b10-q011",
+                  "type": "question",
+                  "text": "Explain the Gradle build lifecycle: initialization, configuration, execution.",
+                  "number": "10.11",
+                  "priority": "C"
+                },
+                {
+                  "id": "b10-q012",
+                  "type": "question",
+                  "text": "What goes into a convention plugin, and why is it better than `subprojects {}`?",
+                  "number": "10.12",
+                  "priority": "C"
+                },
+                {
+                  "id": "b10-q013",
+                  "type": "question",
+                  "text": "What problems do version catalogs solve at 100 modules, and what do they *not* solve?",
+                  "number": "10.13",
+                  "priority": "C"
+                },
+                {
+                  "id": "b10-q014",
+                  "type": "question",
+                  "text": "How do you enforce a build-time budget as a team policy?",
+                  "number": "10.14",
+                  "priority": "C"
+                },
+                {
+                  "id": "b10-q015",
+                  "type": "question",
+                  "text": "How do you handle a flaky CI suite without disabling tests?",
+                  "number": "10.15",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "**Целиком во второй волне.** По отчётам о процессах Revolut / Monzo / N26 / Wise отдельного раунда по билд-инженерии нет. Но вопросы 10.1–10.4 регулярно всплывают как follow-up, когда ты рассказываешь про свой многомодульный проект (см. вопрос 4.4 из Списка 1 — «сколько модулей и какое реальное время сборки»). Поэтому первые четыре — **A**."
+        }
+      ]
+    },
+    {
+      "id": "b11",
+      "number": 11,
+      "title": "Security",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b11-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Security",
+          "hot": false,
+          "timed": false,
+          "topic": "Security",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b11-q001",
+                  "type": "question",
+                  "text": "Which OWASP Mobile Top 10 risks matter most for a banking app, and why?",
+                  "number": "11.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b11-q002",
+                  "type": "question",
+                  "text": "How do you handle API keys and config in the app — what is the honest answer?",
+                  "number": "11.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b11-q003",
+                  "type": "question",
+                  "text": "GDPR/PII: what does a mobile engineer owe regarding logging, analytics and data deletion?",
+                  "number": "11.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b11-q004",
+                  "type": "question",
+                  "text": "How do you audit exported components in a large app?",
+                  "number": "11.4",
+                  "priority": "B"
+                },
+                {
+                  "id": "b11-q005",
+                  "type": "question",
+                  "text": "How do you protect against screen recording and tapjacking/overlay attacks?",
+                  "number": "11.5",
+                  "priority": "B"
+                },
+                {
+                  "id": "b11-q006",
+                  "type": "question",
+                  "text": "What does obfuscation actually protect against, and what does it not?",
+                  "number": "11.6",
+                  "priority": "B"
+                },
+                {
+                  "id": "b11-q007",
+                  "type": "question",
+                  "text": "Give a WebView security checklist.",
+                  "number": "11.7",
+                  "priority": "C"
+                },
+                {
+                  "id": "b11-q008",
+                  "type": "question",
+                  "text": "How do you prevent deep link hijacking? *(частично закрыто вопросом 13.5 Списка 1)*",
+                  "number": "11.8",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b12",
+      "number": 12,
+      "title": "Live Coding / LLD — второй эшелон",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b12-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Live Coding / LLD — второй эшелон",
+          "hot": false,
+          "timed": false,
+          "topic": "Live Coding / LLD — второй эшелон",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b12-q001",
+                  "type": "question",
+                  "text": "Debounce and throttle utilities **without using Flow**.",
+                  "number": "12.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b12-q002",
+                  "type": "question",
+                  "text": "In-memory key-value store with nested transactions (`begin`, `commit`, `rollback`).",
+                  "number": "12.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b12-q003",
+                  "type": "question",
+                  "text": "Implement a `Result`-like type and a composable pipeline over it.",
+                  "number": "12.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b12-q004",
+                  "type": "question",
+                  "text": "Repository pagination logic combining a cursor with a local cache.",
+                  "number": "12.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b12-q005",
+                  "type": "question",
+                  "text": "Pub/sub event bus with backpressure handling.",
+                  "number": "12.5",
+                  "priority": "A"
+                },
+                {
+                  "id": "b12-q006",
+                  "type": "question",
+                  "text": "**Implement a List / dynamic array from scratch**: growth strategy, amortized complexity, iterator, `equals`. *(реальная задача Lyft; для европейского финтеха вторично, для Big Tech — **A**)*",
+                  "number": "12.6",
+                  "priority": "B"
+                },
+                {
+                  "id": "b12-q007",
+                  "type": "question",
+                  "text": "Add pagination with loading/error states to an existing list screen.",
+                  "number": "12.7",
+                  "priority": "A"
+                },
+                {
+                  "id": "b12-q008",
+                  "type": "question",
+                  "text": "Add search with debounce to an existing screen without breaking rotation behaviour.",
+                  "number": "12.8",
+                  "priority": "A"
+                },
+                {
+                  "id": "b12-q009",
+                  "type": "question",
+                  "text": "A screen re-fetches data on every rotation. Fix it, then explain what you changed and why.",
+                  "number": "12.9",
+                  "priority": "A"
+                },
+                {
+                  "id": "b12-q010",
+                  "type": "question",
+                  "text": "Take a screen with a leaking listener and fix the leak; **prove** the fix.",
+                  "number": "12.10",
+                  "priority": "A"
+                },
+                {
+                  "id": "b12-q011",
+                  "type": "question",
+                  "text": "Given failing tests, make them pass without changing the tests.",
+                  "number": "12.11",
+                  "priority": "B"
+                },
+                {
+                  "id": "b12-q012",
+                  "type": "question",
+                  "text": "Add unit tests to an untested ViewModel; then refactor it to make the tests simpler.",
+                  "number": "12.12",
+                  "priority": "B"
+                },
+                {
+                  "id": "b12-q013",
+                  "type": "question",
+                  "text": "A `RecyclerView`/`LazyColumn` janks while scrolling. Profile it and fix it live.",
+                  "number": "12.13",
+                  "priority": "B"
+                },
+                {
+                  "id": "b12-q014",
+                  "type": "question",
+                  "text": "Streaming CSV transaction parser with error accumulation instead of fail-fast.",
+                  "number": "12.14",
+                  "priority": "B"
+                },
+                {
+                  "id": "b12-q015",
+                  "type": "question",
+                  "text": "Booking / parking-lot system (classic OOD) made concurrency-safe.",
+                  "number": "12.15",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Задачи, которые не попали в топ-10 ядра. Формат тот же: **работающий код + тесты + thread safety + таймбокс**."
+        }
+      ]
+    },
+    {
+      "id": "b13",
+      "number": 13,
+      "title": "Mobile System Design — второй эшелон",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b13-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Mobile System Design — второй эшелон",
+          "hot": false,
+          "timed": false,
+          "topic": "Mobile System Design — второй эшелон",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b13-q001",
+                  "type": "question",
+                  "text": "Design a shared caching layer used by every feature in a modular app.",
+                  "number": "13.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b13-q002",
+                  "type": "question",
+                  "text": "Design in-app search with typeahead over local and remote data.",
+                  "number": "13.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b13-q003",
+                  "type": "question",
+                  "text": "Design \"download for offline\" for media, with expiry.",
+                  "number": "13.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b13-q004",
+                  "type": "question",
+                  "text": "Design an offline-first notes app with multi-device sync.",
+                  "number": "13.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b13-q005",
+                  "type": "question",
+                  "text": "Migrate a legacy monolithic app to a modular structure — plan it **as a design problem**, not as a refactor.",
+                  "number": "13.5",
+                  "priority": "A"
+                },
+                {
+                  "id": "b13-q006",
+                  "type": "question",
+                  "text": "Design a client-side A/B testing framework.",
+                  "number": "13.6",
+                  "priority": "B"
+                },
+                {
+                  "id": "b13-q007",
+                  "type": "question",
+                  "text": "Design a payments SDK embedded by third-party apps.",
+                  "number": "13.7",
+                  "priority": "B"
+                },
+                {
+                  "id": "b13-q008",
+                  "type": "question",
+                  "text": "Design an image-loading library from scratch.",
+                  "number": "13.8",
+                  "priority": "B"
+                },
+                {
+                  "id": "b13-q009",
+                  "type": "question",
+                  "text": "Design a ride-hailing client: live location, ETA, trip state machine.",
+                  "number": "13.9",
+                  "priority": "B"
+                },
+                {
+                  "id": "b13-q010",
+                  "type": "question",
+                  "text": "A feature telling drivers which part of the city has the highest demand — **design the server API first, then the client architecture.** *(реальная задача Lyft; тренирует навык «и клиент, и контракт»)*",
+                  "number": "13.10",
+                  "priority": "B"
+                },
+                {
+                  "id": "b13-q011",
+                  "type": "question",
+                  "text": "Design the Robinhood app.",
+                  "number": "13.11",
+                  "priority": "B"
+                },
+                {
+                  "id": "b13-q012",
+                  "type": "question",
+                  "text": "Design Instagram Stories.",
+                  "number": "13.12",
+                  "priority": "C"
+                },
+                {
+                  "id": "b13-q013",
+                  "type": "question",
+                  "text": "Design Slack chat.",
+                  "number": "13.13",
+                  "priority": "C"
+                },
+                {
+                  "id": "b13-q014",
+                  "type": "question",
+                  "text": "Design a photo streaming app.",
+                  "number": "13.14",
+                  "priority": "C"
+                },
+                {
+                  "id": "b13-q015",
+                  "type": "question",
+                  "text": "Design a ride-sharing service between three buildings on a campus.",
+                  "number": "13.15",
+                  "priority": "C"
+                },
+                {
+                  "id": "b13-q016",
+                  "type": "question",
+                  "text": "Design a JIRA-like app for planning family and neighbourhood events. *(реально задавали на Google Android)*",
+                  "number": "13.16",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b14",
+      "number": 14,
+      "title": "Algorithms — второй эшелон",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b14-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Algorithms — второй эшелон",
+          "hot": false,
+          "timed": false,
+          "topic": "Algorithms — второй эшелон",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b14-q001",
+                  "type": "question",
+                  "text": "Valid Parentheses / Min Stack *(stack design)*",
+                  "number": "14.1",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q002",
+                  "type": "question",
+                  "text": "Product of Array Except Self *(prefix/suffix)*",
+                  "number": "14.2",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q003",
+                  "type": "question",
+                  "text": "Three Sum *(two pointers)*",
+                  "number": "14.3",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q004",
+                  "type": "question",
+                  "text": "Validate BST + Lowest Common Ancestor",
+                  "number": "14.4",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q005",
+                  "type": "question",
+                  "text": "Merge k Sorted Lists *(heap)*",
+                  "number": "14.5",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q006",
+                  "type": "question",
+                  "text": "House Robber *(DP)*",
+                  "number": "14.6",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q007",
+                  "type": "question",
+                  "text": "Add two binary strings *(реально задавали на мобильном интервью)*",
+                  "number": "14.7",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q008",
+                  "type": "question",
+                  "text": "Flatten a nested structure — iterator design",
+                  "number": "14.8",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q009",
+                  "type": "question",
+                  "text": "Parse and evaluate a simple expression",
+                  "number": "14.9",
+                  "priority": "C"
+                },
+                {
+                  "id": "b14-q010",
+                  "type": "question",
+                  "text": "Amortized analysis: объяснить на примере динамического массива",
+                  "number": "14.10",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q011",
+                  "type": "question",
+                  "text": "Hash collisions: что происходит и когда `HashMap` деградирует",
+                  "number": "14.11",
+                  "priority": "B"
+                },
+                {
+                  "id": "b14-q012",
+                  "type": "question",
+                  "text": "When is O(n log n) better than O(n) in practice? Space-time trade-offs.",
+                  "number": "14.12",
+                  "priority": "B"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Если целишься только в европейский финтех — весь блок **C**. Если добавляешь Bolt или Big Tech — 14.1–14.6 становятся **A**."
+        }
+      ]
+    },
+    {
+      "id": "b15",
+      "number": 15,
+      "title": "Rapid-fire экран",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b15-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Rapid-fire экран",
+          "hot": false,
+          "timed": false,
+          "topic": "Rapid-fire экран",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b15-q001",
+                  "type": "question",
+                  "text": "What's the difference between a process and a thread on Android?",
+                  "number": "15.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q002",
+                  "type": "question",
+                  "text": "`Service` vs `IntentService` vs `WorkManager` — one sentence each.",
+                  "number": "15.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q003",
+                  "type": "question",
+                  "text": "What is `minSdk` vs `targetSdk` vs `compileSdk`?",
+                  "number": "15.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q004",
+                  "type": "question",
+                  "text": "What is an `AAB` and how does it differ from an `APK`?",
+                  "number": "15.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q005",
+                  "type": "question",
+                  "text": "What is a memory leak, in one sentence?",
+                  "number": "15.5",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q006",
+                  "type": "question",
+                  "text": "What is `dp` vs `sp` vs `px`?",
+                  "number": "15.6",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q007",
+                  "type": "question",
+                  "text": "What is the difference between an abstract class and an interface in Kotlin?",
+                  "number": "15.7",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q008",
+                  "type": "question",
+                  "text": "`HashMap` vs `LinkedHashMap` vs `TreeMap`?",
+                  "number": "15.8",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q009",
+                  "type": "question",
+                  "text": "What is the difference between `Iterable` and `Sequence`?",
+                  "number": "15.9",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q010",
+                  "type": "question",
+                  "text": "What is `Parcelable` and why is it faster than `Serializable`?",
+                  "number": "15.10",
+                  "priority": "A"
+                },
+                {
+                  "id": "b15-q011",
+                  "type": "question",
+                  "text": "What is a `BroadcastReceiver` and what changed with implicit broadcasts?",
+                  "number": "15.11",
+                  "priority": "B"
+                },
+                {
+                  "id": "b15-q012",
+                  "type": "question",
+                  "text": "What is the difference between `commit()` and `apply()`?",
+                  "number": "15.12",
+                  "priority": "B"
+                },
+                {
+                  "id": "b15-q013",
+                  "type": "question",
+                  "text": "What is a `Fragment` back stack, and what is `addToBackStack(null)` doing?",
+                  "number": "15.13",
+                  "priority": "B"
+                },
+                {
+                  "id": "b15-q014",
+                  "type": "question",
+                  "text": "What is `ViewHolder` and why does `RecyclerView` need it?",
+                  "number": "15.14",
+                  "priority": "B"
+                },
+                {
+                  "id": "b15-q015",
+                  "type": "question",
+                  "text": "`View.GONE` vs `INVISIBLE` — what's the layout cost?",
+                  "number": "15.15",
+                  "priority": "B"
+                },
+                {
+                  "id": "b15-q016",
+                  "type": "question",
+                  "text": "What is a `ContentProvider` used for today?",
+                  "number": "15.16",
+                  "priority": "B"
+                },
+                {
+                  "id": "b15-q017",
+                  "type": "question",
+                  "text": "What is tail recursion and does Kotlin optimise it?",
+                  "number": "15.17",
+                  "priority": "B"
+                },
+                {
+                  "id": "b15-q018",
+                  "type": "question",
+                  "text": "What is a daemon thread?",
+                  "number": "15.18",
+                  "priority": "C"
+                },
+                {
+                  "id": "b15-q019",
+                  "type": "question",
+                  "text": "What is a sticky intent, and why is it discouraged?",
+                  "number": "15.19",
+                  "priority": "C"
+                },
+                {
+                  "id": "b15-q020",
+                  "type": "question",
+                  "text": "What does `@Synchronized` compile to?",
+                  "number": "15.20",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Блок коротких вопросов бывает в начале телефонного скрина (подтверждено отчётами по Reddit: «Android rapid fire questions в начале, потом LeetCode»). Ответ — **2–3 предложения, без «ну, это когда…»**.\n**Это дешёвый блок.** Один вечер прогона вслух закрывает его целиком. Сделай это в последнюю неделю перед первым собеседованием, а не сейчас."
+        }
+      ]
+    },
+    {
+      "id": "b16",
+      "number": 16,
+      "title": "Behavioral — расширенный",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b16-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Behavioral — расширенный",
+          "hot": false,
+          "timed": false,
+          "topic": "Behavioral — расширенный",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b16-q001",
+                  "type": "question",
+                  "text": "Describe your role in a cross-functional project with design, backend and compliance.",
+                  "number": "16.1",
+                  "priority": "A"
+                },
+                {
+                  "id": "b16-q002",
+                  "type": "question",
+                  "text": "Tell me about working in a legacy codebase you didn't write. How do you onboard onto an unfamiliar codebase?",
+                  "number": "16.2",
+                  "priority": "A"
+                },
+                {
+                  "id": "b16-q003",
+                  "type": "question",
+                  "text": "Tell me about something you shipped that you weren't proud of.",
+                  "number": "16.3",
+                  "priority": "A"
+                },
+                {
+                  "id": "b16-q004",
+                  "type": "question",
+                  "text": "Describe a time you had to say no.",
+                  "number": "16.4",
+                  "priority": "A"
+                },
+                {
+                  "id": "b16-q005",
+                  "type": "question",
+                  "text": "Tell me about a time you used data to make a decision.",
+                  "number": "16.5",
+                  "priority": "A"
+                },
+                {
+                  "id": "b16-q006",
+                  "type": "question",
+                  "text": "How do you operate under high ambiguity and high pace?",
+                  "number": "16.6",
+                  "priority": "A"
+                },
+                {
+                  "id": "b16-q007",
+                  "type": "question",
+                  "text": "Describe taking ownership of something outside your remit.",
+                  "number": "16.7",
+                  "priority": "A"
+                },
+                {
+                  "id": "b16-q008",
+                  "type": "question",
+                  "text": "How do you handle a teammate who consistently submits low-quality PRs?",
+                  "number": "16.8",
+                  "priority": "B"
+                },
+                {
+                  "id": "b16-q009",
+                  "type": "question",
+                  "text": "Describe disagreeing with a product decision.",
+                  "number": "16.9",
+                  "priority": "B"
+                },
+                {
+                  "id": "b16-q010",
+                  "type": "question",
+                  "text": "Tell me about a calculated risk you took.",
+                  "number": "16.10",
+                  "priority": "B"
+                },
+                {
+                  "id": "b16-q011",
+                  "type": "question",
+                  "text": "Describe moving fast and breaking something. How do you balance it now?",
+                  "number": "16.11",
+                  "priority": "B"
+                },
+                {
+                  "id": "b16-q012",
+                  "type": "question",
+                  "text": "Tell me about improving a process rather than a product.",
+                  "number": "16.12",
+                  "priority": "B"
+                },
+                {
+                  "id": "b16-q013",
+                  "type": "question",
+                  "text": "What's the most interesting bug you've ever debugged? *(во многом дубль 4.7 из Списка 1 — переиспользуй ту же историю)*",
+                  "number": "16.13",
+                  "priority": "B"
+                },
+                {
+                  "id": "b16-q014",
+                  "type": "question",
+                  "text": "How do you keep up with the Android ecosystem?",
+                  "number": "16.14",
+                  "priority": "B"
+                },
+                {
+                  "id": "b16-q015",
+                  "type": "question",
+                  "text": "Where do you want to be in three years?",
+                  "number": "16.15",
+                  "priority": "B"
+                },
+                {
+                  "id": "b16-q016",
+                  "type": "question",
+                  "text": "Tell me about trading off quality against speed. *(дубль 15.14 из Списка 1)*",
+                  "number": "16.16",
+                  "priority": "C"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Ядро закрывает 15 вопросов через 6–8 историй. Эти — те же истории под другими углами. Проверь, что каждая заготовленная история отвечает минимум на три вопроса отсюда — тогда блок закрыт без отдельной подготовки."
+        }
+      ]
+    },
+    {
+      "id": "b17",
+      "number": 17,
+      "title": "Вопросы интервьюеру — расширенный",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b17-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "Вопросы интервьюеру — расширенный",
+          "hot": false,
+          "timed": false,
+          "topic": "Вопросы интервьюеру — расширенный",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b17-q001",
+                  "type": "question",
+                  "text": "How much of the app is Compose vs Views? What's the migration state?",
+                  "number": "17.1",
+                  "priority": "B",
+                  "note": "кому задавать: инженеру"
+                },
+                {
+                  "id": "b17-q002",
+                  "type": "question",
+                  "text": "What does on-call look like for mobile engineers?",
+                  "number": "17.2",
+                  "priority": "B",
+                  "note": "кому задавать: инженеру"
+                },
+                {
+                  "id": "b17-q003",
+                  "type": "question",
+                  "text": "What's the testing culture — coverage, e2e, manual QA?",
+                  "number": "17.3",
+                  "priority": "B",
+                  "note": "кому задавать: инженеру"
+                },
+                {
+                  "id": "b17-q004",
+                  "type": "question",
+                  "text": "How does the team resolve technical disagreements in practice?",
+                  "number": "17.4",
+                  "priority": "B",
+                  "note": "кому задавать: инженеру"
+                },
+                {
+                  "id": "b17-q005",
+                  "type": "question",
+                  "text": "What's the team's biggest technical challenge in the next six months?",
+                  "number": "17.5",
+                  "priority": "B",
+                  "note": "кому задавать: инженеру / EM"
+                },
+                {
+                  "id": "b17-q006",
+                  "type": "question",
+                  "text": "How do product and engineering split ownership of \"what\" vs \"how\"?",
+                  "number": "17.6",
+                  "priority": "B",
+                  "note": "кому задавать: EM"
+                },
+                {
+                  "id": "b17-q007",
+                  "type": "question",
+                  "text": "Why is this role open?",
+                  "number": "17.7",
+                  "priority": "B",
+                  "note": "кому задавать: EM / рекрутеру"
+                },
+                {
+                  "id": "b17-q008",
+                  "type": "question",
+                  "text": "How is the team structured, and who would I work with day to day?",
+                  "number": "17.8",
+                  "priority": "B",
+                  "note": "кому задавать: EM"
+                },
+                {
+                  "id": "b17-q009",
+                  "type": "question",
+                  "text": "What does the mobile platform team own, and how do feature teams interact with it?",
+                  "number": "17.9",
+                  "priority": "B",
+                  "note": "кому задавать: EM"
+                },
+                {
+                  "id": "b17-q010",
+                  "type": "question",
+                  "text": "How do you decide what goes into the app vs the backend?",
+                  "number": "17.10",
+                  "priority": "B",
+                  "note": "кому задавать: инженеру"
+                },
+                {
+                  "id": "b17-q011",
+                  "type": "question",
+                  "text": "What's the app's crash-free rate trend over the last year, and what drove it?",
+                  "number": "17.11",
+                  "priority": "B",
+                  "note": "кому задавать: инженеру"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ],
+          "prose": "Ядро даёт четыре сгруппированных вопроса — этого хватает. Здесь остальные, на случай, когда у тебя несколько раундов подряд и нужны разные вопросы для разных людей."
+        }
+      ]
+    },
+    {
+      "id": "b18",
+      "number": 18,
+      "title": "English",
+      "dateRange": "",
+      "days": [
+        {
+          "id": "b18-d1",
+          "date": null,
+          "index": 0,
+          "weekday": "",
+          "title": "English",
+          "hot": false,
+          "timed": false,
+          "topic": "English",
+          "tiers": [
+            {
+              "level": 20,
+              "items": [
+                {
+                  "id": "b18-q001",
+                  "type": "question",
+                  "text": "Explaining a technical trade-off to a **non-technical stakeholder**. *(поднимается до **A** для Monzo: там в behavioural-раунде интервьюеры могут не иметь мобильного опыта)*",
+                  "number": "18.1",
+                  "priority": "B"
+                },
+                {
+                  "id": "b18-q002",
+                  "type": "question",
+                  "text": "Small talk at the start and a graceful close at the end.",
+                  "number": "18.2",
+                  "priority": "B"
+                },
+                {
+                  "id": "b18-q003",
+                  "type": "question",
+                  "text": "Спрашивать про процесс, дедлайны и следующие шаги, не звуча тревожно.",
+                  "number": "18.3",
+                  "priority": "B"
+                }
+              ]
+            },
+            {
+              "level": 40,
+              "items": []
+            },
+            {
+              "level": 60,
+              "items": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "blocks": 18,
+    "questions": 233,
+    "byPriority": {
+      "A": 81,
+      "B": 115,
+      "C": 37
+    }
+  }
+}
