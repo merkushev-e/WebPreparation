@@ -4,7 +4,7 @@
   'use strict';
 
   var STORAGE_KEY = 'interview-prep-v1';
-  var STATE_VERSION = 3;
+  var STATE_VERSION = 4;
   var PLANNED_START = PROGRAM.start || '2026-08-01';
 
   /**
@@ -263,6 +263,22 @@
   }
   function tiersForMode(mode) { return mode === 20 ? 1 : mode === 60 ? 2 : 3; }
 
+  /**
+   * Повторение: пункты предыдущего дня программы, которые день показывает перед новой темой.
+   * Отметка одна на весь блок («повторил») и живёт в дне, а не в пунктах: сами вопросы
+   * остаются отмеченными и оценёнными со своего дня, повторение их не переоткрывает.
+   */
+  function reviewFor(day) {
+    if (!STATE.review || !day || typeof day.index !== 'number' || day.index <= 0) return null;
+    var prev = DAYS()[day.index - 1];
+    if (!prev) return null;
+    var items = [];
+    prev.day.tiers.forEach(function (t) { t.items.forEach(function (it) { items.push(it); }); });
+    if (!items.length) return null;
+    return { day: prev.day, week: prev.week, items: items };
+  }
+  function reviewDone(day) { var v = STATE.days[day.id]; return !!(v && v.review); }
+
   // ── состояние пользователя ──────────────────────────────────────────────
 
   var STATE = load();
@@ -274,7 +290,8 @@
       track: 'core',   // какой список вопросов проходим: ядро / вторая волна / полная программа
       minPriority: 'all', // фильтр приоритета внутри трека
       startWeek: 1,    // с какой недели/блока начинается программа
-      splitSize: 3,    // резать дни по 3 пункта (1+1+1); 0 — не резать
+      splitSize: 1,    // одна тема в день; 0 — не резать
+      review: true,    // каждый день начинается с повторения темы предыдущего дня
       norm: 60,        // норма дня: сколько блоков нужно закрыть, чтобы день считался пройденным
       flowMode: true,  // плавающий календарь: «Сегодня» = первый незакрытый день
       items: {},
@@ -291,10 +308,11 @@
     if (raw.track === 'core' || raw.track === 'second' || raw.track === 'full') s.track = raw.track;
     if (['all', 'kill', 'A', 'AB'].indexOf(raw.minPriority) >= 0) s.minPriority = raw.minPriority;
     if (typeof raw.startWeek === 'number' && raw.startWeek >= 0 && raw.startWeek <= 20) s.startWeek = raw.startWeek | 0;
-    // Размер дня: сохранённое значение уважаем, но ровно один раз — при переходе на v3 —
-    // приводим его к новому умолчанию 3 (1+1+1). Иначе старое 6 из предыдущей версии
-    // навсегда перекрывает новое умолчание, и приложение показывает не то, что настроено в коде.
-    if ([0, 3, 6, 9].indexOf(raw.splitSize) >= 0 && (raw.version | 0) >= 3) s.splitSize = raw.splitSize;
+    // Размер дня переносится, только если состояние уже той же версии, что и сборка.
+    // Иначе сохранённое значение навсегда перекрывает новое умолчание: человек обновляет
+    // приложение, а день у него остаётся прежним. Смена умолчания = смена версии состояния.
+    if ([0, 1, 3, 6, 9].indexOf(raw.splitSize) >= 0 && (raw.version | 0) >= STATE_VERSION) s.splitSize = raw.splitSize;
+    if (typeof raw.review === 'boolean') s.review = raw.review;
     if (raw.norm === 20 || raw.norm === 60 || raw.norm === 120) s.norm = raw.norm;
     if (typeof raw.flowMode === 'boolean') s.flowMode = raw.flowMode;
     if (raw.items && typeof raw.items === 'object') {
@@ -310,7 +328,8 @@
         var v = raw.days[k];
         if (!v || typeof v !== 'object') return;
         var mode = (v.mode === 20 || v.mode === 60 || v.mode === 120) ? v.mode : null;
-        s.days[k] = { mode: mode, completedAt: typeof v.completedAt === 'string' ? v.completedAt : null };
+        s.days[k] = { mode: mode, completedAt: typeof v.completedAt === 'string' ? v.completedAt : null,
+          review: v.review === true };
       });
     }
     if (raw.settings && (raw.settings.theme === 'light' || raw.settings.theme === 'dark')) {
@@ -352,7 +371,7 @@
   }
   function dst(id) {
     var v = STATE.days[id];
-    if (!v) { v = STATE.days[id] = { mode: null, completedAt: null }; }
+    if (!v) { v = STATE.days[id] = { mode: null, completedAt: null, review: false }; }
     return v;
   }
   function dayDate(day) { return isoAdd(STATE.startDate, day.index); }
@@ -375,12 +394,22 @@
     // при смене нарезки id частей меняются, а отметки пунктов — нет: считаем по ним
     return normDone(day);
   }
-  /** Норма дня выполнена — все пункты в её пределах отмечены. */
+  /** Норма дня выполнена — все пункты в её пределах отмечены и повторение пройдено. */
   function normDone(day) {
     var ids = itemIdsOfDay(day, tiersForMode(dayMode(day)));
     // день без пунктов («Вс 4 окт · Пауза») закрывается только кнопкой, сам собой — никогда
     if (!ids.length) return false;
-    return ids.every(function (id) { return st(id).done; });
+    if (!ids.every(function (id) { return st(id).done; })) return false;
+    return !reviewFor(day) || reviewDone(day);
+  }
+
+  /** Закрыть день, если норма выполнена. Возвращает true, если день только что закрылся. */
+  function autoClose(day) {
+    var rec = STATE.days[day.id];
+    if (rec && rec.completedAt) return false;
+    if (!normDone(day)) return false;
+    dst(day.id).completedAt = new Date().toISOString();
+    return true;
   }
   /**
    * Отложенные пункты: из закрытых дней, но не отмеченные. Сюда попадает блок сверх
@@ -497,13 +526,18 @@
     var ids = itemIdsOfDay(day, tiersForMode(mode));
     var done = 0;
     ids.forEach(function (id) { if (st(id).done) done++; });
-    return { done: done, total: ids.length };
+    return withReview(day, done, ids.length);
   }
   function dayProgressAll(day) {
     var ids = itemIdsOfDay(day, null);
     var done = 0;
     ids.forEach(function (id) { if (st(id).done) done++; });
-    return { done: done, total: ids.length };
+    return withReview(day, done, ids.length);
+  }
+  /** Повторение — такой же пункт дня, как и новая тема: два дела, оба видны в счётчике. */
+  function withReview(day, done, total) {
+    if (reviewFor(day)) { total++; if (reviewDone(day)) done++; }
+    return { done: done, total: total };
   }
 
   /** Текст пункта без ведущего эмодзи типа — его уже показывает иконка слева. */
@@ -523,7 +557,7 @@
     h += '<button class="chk" type="button" data-act="done" data-id="' + it.id + '"' +
       ' aria-pressed="' + s.done + '" title="Сделано" aria-label="Сделано">✓</button>';
     if (it.priority === 'kill') {
-      h += '<span class="ic-type" title="kill-вопрос: на нём режут">⭐⭐</span>';
+      h += '<span class="ic-type stars" title="kill-вопрос: на нём режут">⭐⭐</span>';
     } else if (it.priority && it.priority !== 'high') {
       h += '<span class="ic-type faint" title="приоритет ' + it.priority + '">' + it.priority + '</span>';
     } else {
@@ -603,7 +637,8 @@
     var h = '';
 
     if (r.allDone) {
-      h += '<div class="card tight small warn muted">Все 65 дней закрыты. Дальше — «Красная зона» и «Отложено».</div>';
+      h += '<div class="card tight small warn muted">Все ' + DAYS().length + ' ' +
+        plural(DAYS().length, 'день', 'дня', 'дней') + ' закрыты. Дальше — «Красная зона» и «Отложено».</div>';
     } else if (!r.exact && !r.pinned) {
       var t = todayISO(), first = dayDate(DAYS()[0].day), last = dayDate(DAYS()[DAYS().length - 1].day);
       var msg;
@@ -638,14 +673,20 @@
       '</div>';
     h += '</div>';
 
-    if (day.prose) h += '<div class="prose">' + md(day.prose) + '</div>';
+    if (day.prose && day.part === 1) h += '<div class="prose">' + md(day.prose) + '</div>';
 
     var p = dayProgress(day, mode);
+    var filled = day.tiers.filter(function (t) { return t.items.length; }).length;
     h += '<div class="row" style="margin-top:14px">';
-    h += '<div class="seg" role="group" aria-label="Норма дня">' +
-      [20, 60, 120].map(function (m) {
-        return '<button type="button" data-act="mode" data-mode="' + m + '" aria-pressed="' + (mode === m) + '">' + m + ' мин</button>';
-      }).join('') + '</div>';
+    // выбор нормы нужен, только когда в дне есть что оставлять сверх неё
+    if (filled > 1) {
+      h += '<div class="seg" role="group" aria-label="Норма дня">' +
+        [20, 60, 120].map(function (m) {
+          return '<button type="button" data-act="mode" data-mode="' + m + '" aria-pressed="' + (mode === m) + '">' + m + ' мин</button>';
+        }).join('') + '</div>';
+    } else {
+      h += '<div class="small faint">' + (rvHead(day) || 'Одна тема в день') + '</div>';
+    }
     h += '<div class="spacer"></div>';
     h += '<div class="small muted nums">' + p.done + ' / ' + p.total + ' по норме</div>';
     h += '</div>';
@@ -662,8 +703,25 @@
       h += '</div>';
     }
 
+    var rv = reviewFor(day);
+    if (rv) {
+      var rdone = reviewDone(day);
+      h += '<section class="tier review open">';
+      h += '<div class="tierhead">' +
+        '<button class="chk" type="button" data-act="review" data-id="' + day.id + '" aria-pressed="' + rdone +
+        '" title="Повторил" aria-label="Повторил">✓</button>' +
+        '<span class="lvl">Повторение</span>' +
+        '<span class="faint small">' + esc(rv.day.title) +
+        (rv.day.parts > 1 ? ' · часть ' + rv.day.part : '') + '</span>' +
+        '<span class="cnt">' + (rdone ? 1 : 0) + '/1</span></div>';
+      h += '<div class="tierbody">' + rv.items.map(reviewRow).join('') + '</div>';
+      h += '</section>';
+    }
+
     var openCount = tiersForMode(mode);
     day.tiers.forEach(function (t, i) {
+      // пустой блок нечего показывать: при одной теме в день их два из трёх
+      if (!t.items.length && filled) return;
       var key = day.id + ':' + i;
       var manual = V.openTiers[key];
       var open = (manual === undefined) ? (i < openCount) : manual;
@@ -676,7 +734,7 @@
       h += '<section class="tier' + (open ? ' open' : '') + (dim ? ' dim' : '') + '">';
       h += '<button class="tierhead" type="button" data-act="tier" data-key="' + key + '" aria-expanded="' + open + '">' +
         '<span class="caret" aria-hidden="true">▶</span>' +
-        '<span class="lvl">' + (i === 0 ? '20 мин' : '+' + t.level + ' мин') + '</span>' +
+        '<span class="lvl">' + (filled > 1 ? (i === 0 ? '20 мин' : '+' + t.level + ' мин') : 'Новая тема') + '</span>' +
         (dim ? '<span class="faint small">сверх нормы — уйдёт в «Отложено»</span>' : '') +
         '<span class="cnt">' + tp.done + '/' + tp.total + '</span></button>';
       h += '<div class="tierbody">' + t.items.map(function (it) {
@@ -698,6 +756,7 @@
     } else {
       var left = itemIdsOfDay(day, null).filter(function (id) { return !st(id).done; }).length;
       var normLeft = itemIdsOfDay(day, tiersForMode(mode)).filter(function (id) { return !st(id).done; }).length;
+      if (rv && !reviewDone(day)) normLeft++;   // повторение — часть нормы, но в «Отложено» не уходит
       h += '<div class="card tight"><div class="row">' +
         '<button class="btn primary" type="button" data-act="finish">' +
         (normLeft ? 'Завершить досрочно' : 'Завершить день') + '</button>' +
@@ -708,6 +767,29 @@
                  : 'Всё пройдено полностью') + '</span>' +
         '</div></div>';
     }
+    return h;
+  }
+
+  /** Короткая подпись про повторение — для дня, где выбор нормы не нужен. */
+  function rvHead(day) {
+    var rv = reviewFor(day);
+    return rv ? 'Повторение + одна новая тема' : null;
+  }
+
+  /**
+   * Строка повторяемого вопроса: без галочки «сделано» — она уже стоит со своего дня.
+   * Оценка уверенности остаётся: повторение затем и нужно, чтобы 🔴 стал 🟢.
+   */
+  function reviewRow(it) {
+    var h = '<div class="item rev" data-item="' + it.id + '">';
+    h += '<span class="ic-type faint" aria-hidden="true" title="повторение">↻</span>';
+    h += '<span class="itext">' + md(bodyText(it)) + (it.note ? '<span class="inote">' + md(it.note) + '</span>' : '') + '</span>';
+    if (it.type === 'question') {
+      h += '<span class="confs">' +
+        confBtn(it.id, 'red', 'r', '🔴') + confBtn(it.id, 'yellow', 'y', '🟡') + confBtn(it.id, 'green', 'g', '🟢') +
+        '</span>';
+    }
+    h += '</div>';
     return h;
   }
 
@@ -736,7 +818,11 @@
       }
     }
 
-    var h = '<h1 class="page">Программа</h1><p class="sub">10 недель, 65 дней. Клик по дню открывает его на экране «Сегодня».</p>';
+    var wn = activeWeeks().length, dn = DAYS().length;
+    var h = '<h1 class="page">Программа</h1><p class="sub">' +
+      wn + ' ' + (STATE.track === 'full' ? plural(wn, 'неделя', 'недели', 'недель') : plural(wn, 'блок', 'блока', 'блоков')) +
+      ', ' + dn + ' ' + plural(dn, 'день', 'дня', 'дней') +
+      '. Клик по дню открывает его на экране «Сегодня».</p>';
 
     activeWeeks().forEach(function (w) {
       var open = V.openWeeks[w.id];
@@ -1141,7 +1227,7 @@
         ? 'Сейчас ритм совпадает с исходным.'
         : 'Сейчас ритм смещён: первый день приходится на ' + weekdayFull(weekdayOf(STATE.startDate)) + '.') +
       '</div>' +
-      '<div class="hint">Все 65 дней пересчитываются от этой даты, структура недель сохраняется. ' +
+      '<div class="hint">Все дни пересчитываются от этой даты, структура программы сохраняется. ' +
       'Сейчас программа идёт с ' + humanDate(STATE.startDate) + ' по ' + humanDate(isoAdd(STATE.startDate, DAYS().length - 1)) + '. ' +
       'Прогресс привязан к пунктам, а не к датам, и не теряется.</div>' +
       '</div></div>';
@@ -1192,7 +1278,7 @@
       ' Сейчас первый день — <strong>' + esc(DAYS()[0].week.title) + ' · ' + esc(DAYS()[0].day.title) + '</strong>.' +
       '</div></div></div>';
 
-    var sizes = [[0, 'весь день'], [3, '3 · 1+1+1'], [6, '6 · 2+2+2'], [9, '9 · 3+3+3']];
+    var sizes = [[1, '1 · одна тема'], [3, '3 · 1+1+1'], [6, '6 · 2+2+2'], [9, '9 · 3+3+3'], [0, 'весь день']];
     var d = DAYS();
     h += '<div class="card"><div class="field" style="margin-bottom:0">' +
       '<label>Сколько пунктов в одном дне</label>' +
@@ -1216,6 +1302,17 @@
       }).join('') + '</div>' +
       '<div class="hint">При норме 60 минут программа проходится за 64 дня — ровно в срок — и покрывает 64% материала. ' +
       'Блок «+60 мин» остаётся сверх нормы и попадает в «Отложено».</div>' +
+      '</div>' +
+      '<div class="field">' +
+      '<label>Повторение вчерашней темы</label>' +
+      '<div class="seg" role="group">' +
+      '<button type="button" data-act="rev" data-rev="1" aria-pressed="' + (STATE.review === true) + '">Повторять</button>' +
+      '<button type="button" data-act="rev" data-rev="0" aria-pressed="' + (STATE.review === false) + '">Не повторять</button>' +
+      '</div>' +
+      '<div class="hint">День начинается с темы предыдущего дня и одной отметки «повторил» — ' +
+      'больше двух дел в дне не появляется. Галочки на самих вопросах повторение не снимает, ' +
+      'а вот оценку 🔴 / 🟡 / 🟢 можно поставить заново: ради этого повторение и нужно. ' +
+      'Первый день программы повторять нечего, там только новая тема.</div>' +
       '</div>' +
       '<div class="field" style="margin-bottom:0">' +
       '<label>Не терять непройденное</label>' +
@@ -1429,6 +1526,16 @@
     render();
   }
 
+  /** Общий финал автозакрытия: сохранить, перерисовать, сказать вслух, что день закрыт. */
+  function closedToast(day) {
+    save();
+    var sm = daySummary(day, dayMode(day));
+    var sk = itemIdsOfDay(day, null).filter(function (x) { return !st(x).done; }).length;
+    render();
+    toast('Норма выполнена, день закрыт · 🟢 ' + sm.green + ' · 🔴 ' + sm.red +
+      (sk ? ' · ' + sk + ' в «Отложено»' : ''));
+  }
+
   var ACTIONS = {
     nav: function (el) {
       var v = el.getAttribute('data-view');
@@ -1443,23 +1550,22 @@
       s.done = !s.done;
       var vd = dayOfItem(id);
       var ref = vd ? { day: vd.day } : null;
-      var rec = ref ? STATE.days[ref.day.id] : null;
-      // норма выполнена — день закрывается сам. Проверяем именно completedAt, а не isClosed():
-      // isClosed() сам опирается на normDone(), иначе условие гасит себя же.
-      if (s.done && ref && !(rec && rec.completedAt) && normDone(ref.day)) {
-        dst(ref.day.id).completedAt = new Date().toISOString();
-        save();
-        var sm = daySummary(ref.day, dayMode(ref.day));
-        var sk = itemIdsOfDay(ref.day, null).filter(function (x) { return !st(x).done; }).length;
-        render();
-        toast('Норма выполнена, день закрыт· 🟢 ' + sm.green + ' · 🔴 ' + sm.red +
-          (sk ? ' · ' + sk + ' в «Отложено»' : ''));
-        return;
-      }
+      // норма выполнена — день закрывается сам (autoClose проверяет completedAt сам:
+      // isClosed() опирается на normDone(), и условие через него гасило бы себя же)
+      if (s.done && ref && autoClose(ref.day)) { closedToast(ref.day); return; }
       save();
       if (V.name === 'red' && V.redTab === 'skipped') { render(); return; }
       refreshItem(id);
       updateDayChrome();
+    },
+
+    review: function (el) {
+      var day = findDay(el.getAttribute('data-id'));
+      if (!day) return;
+      var rec = dst(day.day.id);
+      rec.review = !rec.review;
+      if (rec.review && autoClose(day.day)) { closedToast(day.day); return; }
+      save(); render();
     },
 
     conf: function (el) {
@@ -1583,9 +1689,20 @@
       V.dayId = null; V.openWeeks = {}; V.openTiers = {}; V.random = null;
       save(); render();
       var d = DAYS();
-      toast(n ? 'По ' + n + ' пунктов в день · программа заняла ' + d.length + ' ' +
+      toast(n === 1 ? 'Одна тема в день · программа заняла ' + d.length + ' ' +
+        plural(d.length, 'день', 'дня', 'дней')
+        : n ? 'По ' + n + ' пунктов в день · программа заняла ' + d.length + ' ' +
         plural(d.length, 'день', 'дня', 'дней')
         : 'Дни не режутся · программа заняла ' + d.length + ' ' + plural(d.length, 'день', 'дня', 'дней'));
+    },
+
+    rev: function (el) {
+      var on = el.getAttribute('data-rev') === '1';
+      if (on === STATE.review) return;
+      STATE.review = on;
+      save(); render();
+      toast(on ? 'Каждый день начинается с повторения предыдущей темы'
+               : 'Повторение выключено: в дне только новая тема');
     },
 
     track: function (el) {

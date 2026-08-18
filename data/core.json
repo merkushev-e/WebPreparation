@@ -23,6 +23,13 @@
               "level": 20,
               "items": [
                 {
+                  "id": "b1-q005",
+                  "type": "question",
+                  "text": "`synchronized` vs `ReentrantLock` vs `Mutex` — trade-offs, and why you cannot use `synchronized` around a suspend call.",
+                  "number": "1.5",
+                  "priority": "kill"
+                },
+                {
                   "id": "b1-q001",
                   "type": "question",
                   "text": "Define race condition, data race, deadlock, livelock and starvation. Give a concrete example of each.",
@@ -48,13 +55,6 @@
                   "type": "question",
                   "text": "What is the happens-before relationship in the JMM? Give an example using `volatile`.",
                   "number": "1.4",
-                  "priority": "kill"
-                },
-                {
-                  "id": "b1-q005",
-                  "type": "question",
-                  "text": "`synchronized` vs `ReentrantLock` vs `Mutex` — trade-offs, and why you cannot use `synchronized` around a suspend call.",
-                  "number": "1.5",
                   "priority": "kill"
                 },
                 {

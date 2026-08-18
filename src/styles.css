@@ -199,6 +199,13 @@ h1.page { font-size: 19px; margin: 0 0 4px; font-weight: 660; letter-spacing: -.
 .tierbody { padding: 0 12px 8px; }
 .tier:not(.open) .tierbody { display: none; }
 
+/* повторение вчерашней темы: тот же блок, но приглушённый — он про вчера, а не про сегодня */
+.tier.review { border-style: dashed; background: none; }
+.tier.review .lvl { color: var(--text-dim); }
+.item.rev { align-items: flex-start; }
+.item.rev .itext { color: var(--text-dim); font-size: 13px; }
+.item.rev .ic-type { font-size: 13px; }
+
 /* строка пункта */
 .item {
   display: flex; align-items: flex-start; gap: 9px;
@@ -222,6 +229,7 @@ h1.page { font-size: 19px; margin: 0 0 4px; font-weight: 660; letter-spacing: -.
 .chk[aria-pressed="true"] { background: var(--green-bg); border-color: var(--green); color: var(--green); }
 
 .ic-type { flex: 0 0 auto; width: 17px; text-align: center; font-size: 13px; margin-top: 1px; }
+.ic-type.stars { width: 27px; font-size: 11px; }
 .itext { flex: 1 1 auto; min-width: 0; font-size: 14px; word-wrap: break-word; }
 .qnum { color: var(--text-faint); font-variant-numeric: tabular-nums; margin: 0 5px 0 2px; font-size: 12.5px; }
 .inote { display: block; font-size: 12.5px; color: var(--text-faint); font-style: italic; margin-top: 1px; }

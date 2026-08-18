@@ -111,10 +111,38 @@ function parse(md, cfg) {
   return program;
 }
 
+/**
+ * Ручной порядок первых вопросов.
+ *
+ * Id присваиваются по порядку исходного списка и остаются приклеенными к своему тексту —
+ * переставляем уже готовые пункты, поэтому отметки и оценки не съезжают на соседний вопрос.
+ * b1-q005 («synchronized vs ReentrantLock vs Mutex») поднят первым по просьбе владельца
+ * программы: он начал заниматься именно с него.
+ */
+const PINNED = { 'core.json': ['b1-q005'] };
+
+function applyPins(program, out) {
+  const pins = PINNED[out];
+  if (!pins || !pins.length) return;
+  for (const w of program.weeks) {
+    for (const d of w.days) {
+      for (const t of d.tiers) {
+        const head = [];
+        for (const id of pins) {
+          const i = t.items.findIndex((x) => x.id === id);
+          if (i >= 0) head.push(t.items.splice(i, 1)[0]);
+        }
+        if (head.length) t.items.unshift(...head);
+      }
+    }
+  }
+}
+
 function main() {
   for (const cfg of SOURCES) {
     const md = fs.readFileSync(path.join(ROOT, 'source', cfg.file), 'utf8');
     const program = parse(md, cfg);
+    applyPins(program, cfg.out);
 
     const counts = {};
     let total = 0;
