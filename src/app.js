@@ -16,6 +16,8 @@
     'Пт': 'пятницы', 'Сб': 'субботы', 'Вс': 'воскресенья' };
   var WD_NOM = { 'Пн': 'понедельник', 'Вт': 'вторник', 'Ср': 'среда', 'Чт': 'четверг',
     'Пт': 'пятница', 'Сб': 'суббота', 'Вс': 'воскресенье' };
+  /** Недельный ритм «Пн–Чт теория · Пт код · Сб блок · Вс behavioral» есть только у полной программы. */
+  function hasRhythm() { return !!(DAYS().length && DAYS()[0].day.weekday); }
   function rhythmWeekdayName() { return WD_FULL[DAYS()[0].day.weekday] || DAYS()[0].day.weekday; }
   function weekdayFull(wd) { return WD_NOM[wd] || wd; }
   /** Ближайшая дата (сегодня или позже) с тем же днём недели, что у первого дня программы. */
@@ -74,9 +76,35 @@
     var da = Date.UTC(+pa[0], +pa[1] - 1, +pa[2]), db = Date.UTC(+pb[0], +pb[1] - 1, +pb[2]);
     return Math.round((db - da) / 86400000);
   }
-  function todayISO() {
+  /**
+   * «Сейчас» в часовом поясе занятий. Компьютер может стоять на московском времени,
+   * а человек жить в Бангкоке — тогда и дата дня, и отметка о завершении уезжают на
+   * четыре часа. STATE.tz — смещение от UTC в минутах (Бангкок = 420); null — как в системе.
+   */
+  function nowLocal() {
     var d = new Date();
+    if (typeof STATE === 'undefined' || typeof STATE.tz !== 'number') return d;
+    return new Date(d.getTime() + (STATE.tz + d.getTimezoneOffset()) * 60000);
+  }
+  function todayISO() {
+    var d = nowLocal();
     return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  /** Отметка времени в местном времени: «2026-08-18T21:47». Читается срезом, как и раньше. */
+  function stampNow() {
+    var d = nowLocal();
+    return todayISO() + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function stampTime(v) {
+    var m = String(v || '').match(/T(\d{2}:\d{2})/);
+    return m ? m[1] : '';
+  }
+  /** Смещение часового пояса самого браузера, в минутах. */
+  function systemTz() { return -new Date().getTimezoneOffset(); }
+  function tzLabel(min) {
+    var sign = min < 0 ? '−' : '+';
+    var a = Math.abs(min);
+    return 'UTC' + sign + pad2(Math.floor(a / 60)) + ':' + pad2(a % 60);
   }
   var WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
   /** День недели показанной даты. Из markdown брать нельзя: при сдвиге старта он врёт. */
@@ -292,6 +320,7 @@
       startWeek: 1,    // с какой недели/блока начинается программа
       splitSize: 1,    // одна тема в день; 0 — не резать
       review: true,    // каждый день начинается с повторения темы предыдущего дня
+      tz: null,        // часовой пояс занятий, минут от UTC; null — как в системе
       norm: 60,        // норма дня: сколько блоков нужно закрыть, чтобы день считался пройденным
       flowMode: true,  // плавающий календарь: «Сегодня» = первый незакрытый день
       items: {},
@@ -313,6 +342,7 @@
     // приложение, а день у него остаётся прежним. Смена умолчания = смена версии состояния.
     if ([0, 1, 3, 6, 9].indexOf(raw.splitSize) >= 0 && (raw.version | 0) >= STATE_VERSION) s.splitSize = raw.splitSize;
     if (typeof raw.review === 'boolean') s.review = raw.review;
+    if (raw.tz === null || (typeof raw.tz === 'number' && raw.tz >= -720 && raw.tz <= 840)) s.tz = raw.tz;
     if (raw.norm === 20 || raw.norm === 60 || raw.norm === 120) s.norm = raw.norm;
     if (typeof raw.flowMode === 'boolean') s.flowMode = raw.flowMode;
     if (raw.items && typeof raw.items === 'object') {
@@ -408,7 +438,7 @@
     var rec = STATE.days[day.id];
     if (rec && rec.completedAt) return false;
     if (!normDone(day)) return false;
-    dst(day.id).completedAt = new Date().toISOString();
+    dst(day.id).completedAt = stampNow();
     return true;
   }
   /**
@@ -731,7 +761,7 @@
         tp.total++; if (st(it.id).done) tp.done++;
         (it.children || []).forEach(function (c) { tp.total++; if (st(c.id).done) tp.done++; });
       });
-      h += '<section class="tier' + (open ? ' open' : '') + (dim ? ' dim' : '') + '">';
+      h += '<section class="tier' + (open ? ' open' : '') + (dim ? ' dim' : '') + '" data-tier="' + i + '">';
       h += '<button class="tierhead" type="button" data-act="tier" data-key="' + key + '" aria-expanded="' + open + '">' +
         '<span class="caret" aria-hidden="true">▶</span>' +
         '<span class="lvl">' + (filled > 1 ? (i === 0 ? '20 мин' : '+' + t.level + ' мин') : 'Новая тема') + '</span>' +
@@ -748,11 +778,19 @@
       var sum = daySummary(day, mode);
       var skipped = itemIdsOfDay(day, null).filter(function (id) { return !st(id).done; }).length;
       h += '<div class="card summary"><strong>День завершён</strong> · ' + humanDate(ds.completedAt.slice(0, 10)) +
+        (stampTime(ds.completedAt) ? ', ' + stampTime(ds.completedAt) : '') +
         '<div class="small" style="margin-top:6px">🟢 ' + sum.green + ' · 🟡 ' + sum.yellow +
         ' · 🔴 ' + sum.red + ' ' + plural(sum.red, 'вопрос ушёл', 'вопроса ушло', 'вопросов ушло') + ' в красную зону' +
         (skipped ? ' · ' + skipped + ' ' + plural(skipped, 'пункт', 'пункта', 'пунктов') + ' в «Отложено»' : '') +
         '</div>' +
-        '<div style="margin-top:10px"><button class="btn sm" type="button" data-act="unfinish">Отменить завершение</button></div></div>';
+        '<div class="row" style="margin-top:10px">' +
+        '<button class="btn sm" type="button" data-act="unfinish">Отменить завершение</button>' +
+        '<input class="stampin" type="date" id="cdate" value="' + esc(ds.completedAt.slice(0, 10)) + '" aria-label="Дата завершения">' +
+        '<input class="stampin" type="time" id="ctime" value="' + esc(stampTime(ds.completedAt) || '00:00') + '" aria-label="Время завершения">' +
+        '<button class="btn sm" type="button" data-act="stamp" data-id="' + day.id + '">Поправить время</button>' +
+        '</div>' +
+        '<div class="hint">Забыли отметить вовремя — поставьте фактические дату и время: ' +
+        'на них считаются серия и темп в «Статистике».</div></div>';
     } else {
       var left = itemIdsOfDay(day, null).filter(function (id) { return !st(id).done; }).length;
       var normLeft = itemIdsOfDay(day, tiersForMode(mode)).filter(function (id) { return !st(id).done; }).length;
@@ -791,6 +829,26 @@
     }
     h += '</div>';
     return h;
+  }
+
+  /** Часовые пояса от UTC−12 до UTC+14, включая получасовые. */
+  function tzOptions() {
+    var mins = [];
+    for (var h = -12; h <= 14; h++) {
+      mins.push(h * 60);
+      if ([-9.5, 3.5, 4.5, 5.5, 5.75, 6.5, 8.75, 9.5, 10.5, 12.75].indexOf(h + 0.5) >= 0) mins.push(h * 60 + 30);
+    }
+    [-570, 210, 270, 330, 345, 390, 525, 570, 630, 765].forEach(function (m) {
+      if (mins.indexOf(m) < 0) mins.push(m);
+    });
+    mins.sort(function (a, b) { return a - b; });
+    var HINT = { 0: 'Лондон', 60: 'Берлин', 120: 'Киев', 180: 'Москва', 240: 'Дубай',
+      330: 'Дели', 420: 'Бангкок', 480: 'Сингапур', 540: 'Токио', 600: 'Сидней',
+      '-300': 'Нью-Йорк', '-480': 'Сан-Франциско' };
+    return mins.map(function (m) {
+      return '<option value="' + m + '"' + (STATE.tz === m ? ' selected' : '') + '>' +
+        tzLabel(m) + (HINT[m] ? ' · ' + HINT[m] : '') + '</option>';
+    }).join('');
   }
 
   function daySummary(day, mode) {
@@ -1217,16 +1275,19 @@
       '<div class="row" style="margin-top:8px">' +
       '<button class="btn sm" type="button" data-act="startquick" data-when="0">Начать сегодня</button>' +
       '<button class="btn sm" type="button" data-act="startquick" data-when="1">Начать завтра</button>' +
-      '<button class="btn sm" type="button" data-act="startrhythm">Начать с ' + rhythmWeekdayName() + ' — сохранить ритм</button>' +
+      (hasRhythm() ? '<button class="btn sm" type="button" data-act="startrhythm">Начать с ' +
+        rhythmWeekdayName() + ' — сохранить ритм</button>' : '') +
       '</div>' +
-      '<div class="hint">Программа построена на ритме недели: <strong>Пн–Чт</strong> теория, ' +
-      '<strong>Пт</strong> код, <strong>Сб</strong> большой блок, <strong>Вс</strong> behavioral и английский. ' +
-      'Плановый старт — ' + rhythmWeekdayName() + '. Если начать в другой день недели, ритм сместится: ' +
-      '«большой блок» и behavioral попадут на будни. ' +
-      (weekdayOf(STATE.startDate) === DAYS()[0].day.weekday
-        ? 'Сейчас ритм совпадает с исходным.'
-        : 'Сейчас ритм смещён: первый день приходится на ' + weekdayFull(weekdayOf(STATE.startDate)) + '.') +
-      '</div>' +
+      (hasRhythm()
+        ? '<div class="hint">Программа построена на ритме недели: <strong>Пн–Чт</strong> теория, ' +
+          '<strong>Пт</strong> код, <strong>Сб</strong> большой блок, <strong>Вс</strong> behavioral и английский. ' +
+          'Плановый старт — ' + rhythmWeekdayName() + '. Если начать в другой день недели, ритм сместится: ' +
+          '«большой блок» и behavioral попадут на будни. ' +
+          (weekdayOf(STATE.startDate) === DAYS()[0].day.weekday
+            ? 'Сейчас ритм совпадает с исходным.'
+            : 'Сейчас ритм смещён: первый день приходится на ' + weekdayFull(weekdayOf(STATE.startDate)) + '.') +
+          '</div>'
+        : '') +
       '<div class="hint">Все дни пересчитываются от этой даты, структура программы сохраняется. ' +
       'Сейчас программа идёт с ' + humanDate(STATE.startDate) + ' по ' + humanDate(isoAdd(STATE.startDate, DAYS().length - 1)) + '. ' +
       'Прогресс привязан к пунктам, а не к датам, и не теряется.</div>' +
@@ -1300,8 +1361,23 @@
       [20, 60, 120].map(function (m) {
         return '<button type="button" data-act="norm" data-norm="' + m + '" aria-pressed="' + (STATE.norm === m) + '">' + m + ' мин</button>';
       }).join('') + '</div>' +
-      '<div class="hint">При норме 60 минут программа проходится за 64 дня — ровно в срок — и покрывает 64% материала. ' +
-      'Блок «+60 мин» остаётся сверх нормы и попадает в «Отложено».</div>' +
+      '<div class="hint">' + ((STATE.splitSize === 1)
+        ? 'При одной теме в день норма ни на что не влияет: пункт в дне всего один, ' +
+          'оставлять сверх нормы нечего. Настройка начнёт работать, если резать дни крупнее.'
+        : (STATE.track === 'full'
+          ? 'При норме 60 минут полная программа проходится за 64 дня — ровно в срок — и покрывает 64% материала. '
+          : '') + 'Блок «+60 мин» остаётся сверх нормы и попадает в «Отложено».') + '</div>' +
+      '</div>' +
+      '<div class="field">' +
+      '<label>Часовой пояс занятий</label>' +
+      '<select data-act="tz" aria-label="Часовой пояс занятий">' +
+      '<option value=""' + (STATE.tz === null ? ' selected' : '') + '>Как в системе · ' + tzLabel(systemTz()) + '</option>' +
+      tzOptions() + '</select>' +
+      '<div class="hint">Если компьютер стоит на одном времени, а занимаетесь вы в другом ' +
+      'часовом поясе, день кончается не тогда, когда кончается у вас. Здесь задаётся то время, ' +
+      'по которому приложение считает «сегодня» и записывает отметки. ' +
+      'Сейчас по нему: <strong>' + weekdayOf(todayISO()) + ', ' + humanDate(todayISO()) +
+      ', ' + stampTime(stampNow()) + '</strong>.</div>' +
       '</div>' +
       '<div class="field">' +
       '<label>Повторение вчерашней темы</label>' +
@@ -1469,6 +1545,21 @@
     }, 250);
     timerPaint();
   }
+  /**
+   * Подвинуть таймер, не сбрасывая его. Минус — «я начал раньше, чем нажал кнопку»:
+   * забыл включить, вспомнил через десять минут, вычел десять, и счёт сходится с реальностью.
+   */
+  function timerShift(min) {
+    var d = Math.round(min * 60);
+    T.remain += d;
+    if (T.running) T.endAt += d * 1000;
+    if (T.remain > T.total) T.total = T.remain;
+    if (!T.running && T.remain < 0) T.remain = 0;
+    if (T.remain > 0) T.done = false;
+    timerPaint();
+    toast((min > 0 ? 'Добавлено ' : 'Вычтено ') + Math.abs(min) + ' мин · осталось ' + fmt(T.remain));
+  }
+
   function timerStop() {
     if (T.tick) { clearInterval(T.tick); T.tick = null; }
     T.running = false;
@@ -1630,7 +1721,7 @@
       if (normLeft && !window.confirm('Норма дня не выполнена: не отмечено ' + normLeft +
         '. Закрыть день досрочно? В «Отложено» уйдёт ' + left + ' ' +
         plural(left, 'пункт', 'пункта', 'пунктов') + ' — ничего не потеряется.')) return;
-      ds.completedAt = new Date().toISOString();
+      ds.completedAt = stampNow();
       save();
       render();
       var s = daySummary(day, mode);
@@ -1694,6 +1785,24 @@
         : n ? 'По ' + n + ' пунктов в день · программа заняла ' + d.length + ' ' +
         plural(d.length, 'день', 'дня', 'дней')
         : 'Дни не режутся · программа заняла ' + d.length + ' ' + plural(d.length, 'день', 'дня', 'дней'));
+    },
+
+    stamp: function (el) {
+      var rec = STATE.days[el.getAttribute('data-id')];
+      if (!rec) return;
+      var d = $('#cdate').value, t = $('#ctime').value;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast('Дата не распознана'); return; }
+      rec.completedAt = d + 'T' + (/^\d{2}:\d{2}$/.test(t) ? t : '00:00');
+      save(); render();
+      toast('Отметка о завершении: ' + humanDate(d) + ', ' + stampTime(rec.completedAt));
+    },
+
+    tz: function (el) {
+      var v = el.value === '' ? null : +el.value;
+      STATE.tz = v;
+      save(); render();
+      toast(v === null ? 'Часовой пояс — как в системе: ' + tzLabel(systemTz())
+                       : 'Часовой пояс занятий: ' + tzLabel(v) + ' · сейчас ' + stampTime(stampNow()));
     },
 
     rev: function (el) {
@@ -1814,9 +1923,9 @@
       barEl.parentNode.setAttribute('aria-valuenow', String(pct));
     }
     var counter = main.querySelector('.card .row .small.muted.nums');
-    if (counter) counter.textContent = p.done + ' / ' + p.total;
-    Array.prototype.forEach.call(main.querySelectorAll('.tier'), function (sec, i) {
-      var t = day.tiers[i];
+    if (counter) counter.textContent = p.done + ' / ' + p.total + ' по норме';
+    Array.prototype.forEach.call(main.querySelectorAll('.tier[data-tier]'), function (sec) {
+      var t = day.tiers[+sec.getAttribute('data-tier')];
       if (!t) return;
       var d = 0, tot = 0;
       t.items.forEach(function (it) {
@@ -1831,6 +1940,14 @@
   // поиск — мгновенный, без кнопки
   document.addEventListener('input', function (ev) {
     if (ev.target.id === 'q') { V.q = ev.target.value; renderResults(); }
+  });
+
+  // элементы формы с data-act (например, выбор часового пояса)
+  document.addEventListener('change', function (ev) {
+    var el = ev.target.closest ? ev.target.closest('select[data-act]') : null;
+    if (!el) return;
+    var fn = ACTIONS[el.getAttribute('data-act')];
+    if (fn) fn(el);
   });
 
   // импорт файла
@@ -1866,6 +1983,10 @@
   $('#t-toggle').addEventListener('click', function () {
     if (T.running) timerStop();
     else { if (T.remain <= 0) { T.remain = T.total; T.done = false; } timerStart(); }
+  });
+  $('#t-shift').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-shift]');
+    if (b) timerShift(+b.getAttribute('data-shift'));
   });
   $('#t-reset').addEventListener('click', function () { timerStop(); T.remain = T.total; T.done = false; timerPaint(); });
   $('#t-presets').addEventListener('click', function (ev) {

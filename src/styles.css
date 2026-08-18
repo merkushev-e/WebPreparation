@@ -230,6 +230,13 @@ h1.page { font-size: 19px; margin: 0 0 4px; font-weight: 660; letter-spacing: -.
 
 .ic-type { flex: 0 0 auto; width: 17px; text-align: center; font-size: 13px; margin-top: 1px; }
 .ic-type.stars { width: 27px; font-size: 11px; }
+
+/* поля правки отметки времени на закрытом дне — компактнее, чем в «Настройках» */
+.stampin { padding: 4px 7px; font-size: 12.5px; }
+/* сдвиг таймера и подпись под ним */
+.tshift button { font-variant-numeric: tabular-nums; }
+.thint { font-size: 11.5px; color: var(--text-faint); text-align: center; margin: -2px 0 8px; }
+
 .itext { flex: 1 1 auto; min-width: 0; font-size: 14px; word-wrap: break-word; }
 .qnum { color: var(--text-faint); font-variant-numeric: tabular-nums; margin: 0 5px 0 2px; font-size: 12.5px; }
 .inote { display: block; font-size: 12.5px; color: var(--text-faint); font-style: italic; margin-top: 1px; }
@@ -337,10 +344,11 @@ table.tbl td.n { text-align: right; font-variant-numeric: tabular-nums; }
 
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 5px; }
-input[type="date"], input[type="number"] {
+input[type="date"], input[type="number"], input[type="time"], select {
   background: var(--bg-sunk); border: 1px solid var(--border-str); color: var(--text);
   border-radius: 6px; padding: 7px 10px; font-family: var(--sans); font-size: 14px;
 }
+select { max-width: 100%; }
 .hint { font-size: 12.5px; color: var(--text-faint); margin-top: 6px; line-height: 1.45; }
 .warn { border-left: 3px solid var(--yellow); padding-left: 10px; }
 
