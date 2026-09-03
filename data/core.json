@@ -246,13 +246,6 @@
               "level": 20,
               "items": [
                 {
-                  "id": "b3-q001",
-                  "type": "question",
-                  "text": "What is a coroutine at the bytecode level? Explain CPS transformation and `Continuation`.",
-                  "number": "3.1",
-                  "priority": "high"
-                },
-                {
                   "id": "b3-q002",
                   "type": "question",
                   "text": "What is structured concurrency and what concrete problems does it eliminate?",
@@ -281,48 +274,6 @@
                   "priority": "kill"
                 },
                 {
-                  "id": "b3-q006",
-                  "type": "question",
-                  "text": "How do you make a blocking third-party call cancellable?",
-                  "number": "3.6",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q007",
-                  "type": "question",
-                  "text": "How does `CoroutineExceptionHandler` work, and why doesn't it catch exceptions from `async`?",
-                  "number": "3.7",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q008",
-                  "type": "question",
-                  "text": "`Main` vs `Main.immediate` vs `Default` vs `IO` — thread pools, sizing, use cases. What problem does `limitedParallelism` solve?",
-                  "number": "3.8",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q009",
-                  "type": "question",
-                  "text": "What does \"main-safe suspend function\" mean, and whose responsibility is main-safety?",
-                  "number": "3.9",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q010",
-                  "type": "question",
-                  "text": "How do you inject dispatchers so the code stays testable?",
-                  "number": "3.10",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q011",
-                  "type": "question",
-                  "text": "`runBlocking` vs `runTest`; how does `runTest` handle virtual time and delay skipping?",
-                  "number": "3.11",
-                  "priority": "high"
-                },
-                {
                   "id": "b3-q012",
                   "type": "question",
                   "text": "Cold vs hot: `Flow`, `SharedFlow`, `StateFlow`, `Channel` — compare semantics.",
@@ -337,67 +288,11 @@
                   "priority": "kill"
                 },
                 {
-                  "id": "b3-q014",
-                  "type": "question",
-                  "text": "`map` vs `flatMapLatest` vs `flatMapMerge` vs `flatMapConcat` — a real use case for each.",
-                  "number": "3.14",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q015",
-                  "type": "question",
-                  "text": "`combine` vs `zip` — behaviour with different emission rates.",
-                  "number": "3.15",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q016",
-                  "type": "question",
-                  "text": "`collect` vs `collectLatest` — what exactly gets cancelled?",
-                  "number": "3.16",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q017",
-                  "type": "question",
-                  "text": "What does `flowOn` change, and why does it only affect upstream operators?",
-                  "number": "3.17",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q018",
-                  "type": "question",
-                  "text": "How do `callbackFlow` and `channelFlow` work, and why is `awaitClose` mandatory?",
-                  "number": "3.18",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q019",
-                  "type": "question",
-                  "text": "Wrap a callback-based API in `suspendCancellableCoroutine`. What must you handle?",
-                  "number": "3.19",
-                  "priority": "high"
-                },
-                {
                   "id": "b3-q020",
                   "type": "question",
                   "text": "`Mutex` vs `synchronized` — and how do you deduplicate in-flight requests so five simultaneous callers trigger one network call?",
                   "number": "3.20",
                   "priority": "kill"
-                },
-                {
-                  "id": "b3-q021",
-                  "type": "question",
-                  "text": "`repeatOnLifecycle` vs `flowWithLifecycle` vs `launchWhenStarted` — what is deprecated and why?",
-                  "number": "3.21",
-                  "priority": "high"
-                },
-                {
-                  "id": "b3-q022",
-                  "type": "question",
-                  "text": "How do you test a Flow? Show the Turbine approach for a `SharedFlow`.",
-                  "number": "3.22",
-                  "priority": "high"
                 },
                 {
                   "id": "b3-q023",
@@ -496,6 +391,111 @@
                   "text": "Why is `StateFlow` a poor fit for one-off events (navigation, snackbar)? Walk through `Channel` vs `SharedFlow` vs state-driven event, and the lifecycle race in each. *(живой спор в комьюнити — сильный ответ обязателен для senior)*",
                   "number": "3.36",
                   "priority": "kill"
+                },
+                {
+                  "id": "b3-q001",
+                  "type": "question",
+                  "text": "What is a coroutine at the bytecode level? Explain CPS transformation and `Continuation`.",
+                  "number": "3.1",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q006",
+                  "type": "question",
+                  "text": "How do you make a blocking third-party call cancellable?",
+                  "number": "3.6",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q007",
+                  "type": "question",
+                  "text": "How does `CoroutineExceptionHandler` work, and why doesn't it catch exceptions from `async`?",
+                  "number": "3.7",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q008",
+                  "type": "question",
+                  "text": "`Main` vs `Main.immediate` vs `Default` vs `IO` — thread pools, sizing, use cases. What problem does `limitedParallelism` solve?",
+                  "number": "3.8",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q009",
+                  "type": "question",
+                  "text": "What does \"main-safe suspend function\" mean, and whose responsibility is main-safety?",
+                  "number": "3.9",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q010",
+                  "type": "question",
+                  "text": "How do you inject dispatchers so the code stays testable?",
+                  "number": "3.10",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q011",
+                  "type": "question",
+                  "text": "`runBlocking` vs `runTest`; how does `runTest` handle virtual time and delay skipping?",
+                  "number": "3.11",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q014",
+                  "type": "question",
+                  "text": "`map` vs `flatMapLatest` vs `flatMapMerge` vs `flatMapConcat` — a real use case for each.",
+                  "number": "3.14",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q015",
+                  "type": "question",
+                  "text": "`combine` vs `zip` — behaviour with different emission rates.",
+                  "number": "3.15",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q016",
+                  "type": "question",
+                  "text": "`collect` vs `collectLatest` — what exactly gets cancelled?",
+                  "number": "3.16",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q017",
+                  "type": "question",
+                  "text": "What does `flowOn` change, and why does it only affect upstream operators?",
+                  "number": "3.17",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q018",
+                  "type": "question",
+                  "text": "How do `callbackFlow` and `channelFlow` work, and why is `awaitClose` mandatory?",
+                  "number": "3.18",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q019",
+                  "type": "question",
+                  "text": "Wrap a callback-based API in `suspendCancellableCoroutine`. What must you handle?",
+                  "number": "3.19",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q021",
+                  "type": "question",
+                  "text": "`repeatOnLifecycle` vs `flowWithLifecycle` vs `launchWhenStarted` — what is deprecated and why?",
+                  "number": "3.21",
+                  "priority": "high"
+                },
+                {
+                  "id": "b3-q022",
+                  "type": "question",
+                  "text": "How do you test a Flow? Show the Turbine approach for a `SharedFlow`.",
+                  "number": "3.22",
+                  "priority": "high"
                 },
                 {
                   "id": "b3-q037",

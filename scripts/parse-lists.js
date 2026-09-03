@@ -112,6 +112,34 @@ function parse(md, cfg) {
 }
 
 /**
+ * Kill-вопросы ⭐⭐ — вперёд, внутри каждого блока.
+ *
+ * В исходнике порядок номерной (1.1, 1.2, …), и в большинстве блоков ⭐⭐ и так идут
+ * первыми — но не в блоке 3, где 21 kill-вопрос размазан по всем 42. При одной теме
+ * в день это значит, что до части «вопросов, на которых режут», очередь дойдёт через
+ * полтора месяца. Сортировка устойчивая: внутри одного приоритета номерной порядок
+ * исходника сохраняется. Id приклеены к тексту вопроса, поэтому отметки не съезжают.
+ */
+const PRIORITY_RANK = { kill: 0, high: 1, A: 0, B: 1, C: 2 };
+
+function sortByPriority(program) {
+  for (const w of program.weeks) {
+    for (const d of w.days) {
+      for (const t of d.tiers) {
+        t.items = t.items
+          .map((it, i) => [it, i])
+          .sort((a, b) => {
+            const ra = PRIORITY_RANK[a[0].priority], rb = PRIORITY_RANK[b[0].priority];
+            const pa = ra === undefined ? 9 : ra, pb = rb === undefined ? 9 : rb;
+            return pa - pb || a[1] - b[1];
+          })
+          .map((x) => x[0]);
+      }
+    }
+  }
+}
+
+/**
  * Ручной порядок первых вопросов.
  *
  * Id присваиваются по порядку исходного списка и остаются приклеенными к своему тексту —
@@ -142,6 +170,7 @@ function main() {
   for (const cfg of SOURCES) {
     const md = fs.readFileSync(path.join(ROOT, 'source', cfg.file), 'utf8');
     const program = parse(md, cfg);
+    sortByPriority(program);
     applyPins(program, cfg.out);
 
     const counts = {};

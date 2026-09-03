@@ -316,6 +316,13 @@
                   "priority": "B"
                 },
                 {
+                  "id": "b2-q024",
+                  "type": "question",
+                  "text": "A `ViewModel` obtained inside a `LazyColumn` item — what's the lifecycle, and why is it a bug?",
+                  "number": "2.24",
+                  "priority": "B"
+                },
+                {
                   "id": "b2-q018",
                   "type": "question",
                   "text": "What does the Compose compiler do to a `@Composable` function — what are `$composer` and `$changed`?",
@@ -356,13 +363,6 @@
                   "text": "When do you need intrinsic measurements?",
                   "number": "2.23",
                   "priority": "C"
-                },
-                {
-                  "id": "b2-q024",
-                  "type": "question",
-                  "text": "A `ViewModel` obtained inside a `LazyColumn` item — what's the lifecycle, and why is it a bug?",
-                  "number": "2.24",
-                  "priority": "B"
                 }
               ]
             },
@@ -1405,13 +1405,6 @@
                   "priority": "A"
                 },
                 {
-                  "id": "b12-q006",
-                  "type": "question",
-                  "text": "**Implement a List / dynamic array from scratch**: growth strategy, amortized complexity, iterator, `equals`. *(реальная задача Lyft; для европейского финтеха вторично, для Big Tech — **A**)*",
-                  "number": "12.6",
-                  "priority": "B"
-                },
-                {
                   "id": "b12-q007",
                   "type": "question",
                   "text": "Add pagination with loading/error states to an existing list screen.",
@@ -1438,6 +1431,13 @@
                   "text": "Take a screen with a leaking listener and fix the leak; **prove** the fix.",
                   "number": "12.10",
                   "priority": "A"
+                },
+                {
+                  "id": "b12-q006",
+                  "type": "question",
+                  "text": "**Implement a List / dynamic array from scratch**: growth strategy, amortized complexity, iterator, `equals`. *(реальная задача Lyft; для европейского финтеха вторично, для Big Tech — **A**)*",
+                  "number": "12.6",
+                  "priority": "B"
                 },
                 {
                   "id": "b12-q011",
@@ -1710,13 +1710,6 @@
                   "priority": "B"
                 },
                 {
-                  "id": "b14-q009",
-                  "type": "question",
-                  "text": "Parse and evaluate a simple expression",
-                  "number": "14.9",
-                  "priority": "C"
-                },
-                {
                   "id": "b14-q010",
                   "type": "question",
                   "text": "Amortized analysis: объяснить на примере динамического массива",
@@ -1736,6 +1729,13 @@
                   "text": "When is O(n log n) better than O(n) in practice? Space-time trade-offs.",
                   "number": "14.12",
                   "priority": "B"
+                },
+                {
+                  "id": "b14-q009",
+                  "type": "question",
+                  "text": "Parse and evaluate a simple expression",
+                  "number": "14.9",
+                  "priority": "C"
                 }
               ]
             },
