@@ -176,7 +176,8 @@
   var _days = null, _daysKey = '', _itemDay = {};
 
   function DAYS() {
-    var key = STATE.track + ':' + (STATE.minPriority || 'all') + ':' + (STATE.startWeek || 0) + ':' + (STATE.splitSize || 0);
+    var key = STATE.track + ':' + (STATE.minPriority || 'all') + ':' + (STATE.startWeek || 0) +
+      ':' + (STATE.splitSize || 0) + ':' + (waveOrderOn() ? 'w' : 'b');
     if (_daysKey !== key || !_days) { rebuildDays(); _daysKey = key; }
     return _days;
   }
@@ -190,12 +191,49 @@
       if (e.week.number < from) return;
       sliceDay(e, size).forEach(function (v) { out.push(v); });
     });
+    if (waveOrderOn()) out = byWave(out);
     out.forEach(function (v, i) {
       v.day.index = i;
       itemIdsOfDay(v.day, null).forEach(function (id) { _itemDay[id] = v; });
     });
     _days = out;
   }
+
+  /**
+   * Волны: сначала все ⭐⭐ по всем блокам, потом всё остальное.
+   *
+   * Без этого программа идёт блок за блоком, и до kill-вопросов блока 11 очередь дойдёт
+   * на 140-й день — при том что исходный список требует закрыть все ⭐⭐ к 30 сентября.
+   * Сортировка устойчивая: внутри волны блоки и дни идут прежним порядком, id дней не
+   * меняются (⭐⭐ и так лежат в начале каждого блока), поэтому прогресс не съезжает.
+   * Меняется только порядок дней, то есть какая дата какому дню досталась.
+   */
+  var WAVE_RANK = { kill: 0, high: 1, A: 0, B: 1, C: 2 };
+
+  /** Волна дня — по самому высокому приоритету среди его пунктов. */
+  function waveOf(day) {
+    var best = 9;
+    day.tiers.forEach(function (t) {
+      t.items.forEach(function (it) {
+        var r = WAVE_RANK[it.priority];
+        if (r === undefined) r = 1;
+        if (r < best) best = r;
+      });
+    });
+    return best === 9 ? 1 : best;
+  }
+
+  function byWave(list) {
+    return list
+      .map(function (v, i) { return [v, i]; })
+      .sort(function (a, b) {
+        return waveOf(a[0].day) - waveOf(b[0].day) || a[1] - b[1];
+      })
+      .map(function (x) { return x[0]; });
+  }
+
+  /** Полная программа приоритетов не размечена — там волны нечем считать. */
+  function waveOrderOn() { return STATE.track !== 'full' && STATE.waveOrder !== false; }
 
   /** Режет день на части по `size` верхнеуровневых пунктов: size/3 в каждый из трёх блоков. */
   function sliceDay(entry, size) {
@@ -320,6 +358,7 @@
       startWeek: 1,    // с какой недели/блока начинается программа
       splitSize: 1,    // одна тема в день; 0 — не резать
       review: true,    // каждый день начинается с повторения темы предыдущего дня
+      waveOrder: true, // сначала все ⭐⭐ по всем блокам, потом остальные вопросы
       tz: null,        // часовой пояс занятий, минут от UTC; null — как в системе
       norm: 60,        // норма дня: сколько блоков нужно закрыть, чтобы день считался пройденным
       flowMode: true,  // плавающий календарь: «Сегодня» = первый незакрытый день
@@ -342,6 +381,7 @@
     // приложение, а день у него остаётся прежним. Смена умолчания = смена версии состояния.
     if ([0, 1, 3, 6, 9].indexOf(raw.splitSize) >= 0 && (raw.version | 0) >= STATE_VERSION) s.splitSize = raw.splitSize;
     if (typeof raw.review === 'boolean') s.review = raw.review;
+    if (typeof raw.waveOrder === 'boolean') s.waveOrder = raw.waveOrder;
     if (raw.tz === null || (typeof raw.tz === 'number' && raw.tz >= -720 && raw.tz <= 840)) s.tz = raw.tz;
     if (raw.norm === 20 || raw.norm === 60 || raw.norm === 120) s.norm = raw.norm;
     if (typeof raw.flowMode === 'boolean') s.flowMode = raw.flowMode;
@@ -905,6 +945,7 @@
         h += '<button class="dayrow' + (isToday ? ' today' : '') + '" type="button" data-act="day" data-id="' + d.id + '">' +
           '<span class="wd">' + weekdayOf(dayDate(d)) + ' ' + dayDate(d).slice(8) + '.' + dayDate(d).slice(5, 7) + '</span>' +
           '<span class="dt">' + esc(d.title) + (d.parts > 1 ? ' <span class="faint">· ' + d.part + '/' + d.parts + '</span>' : '') +
+          (waveOrderOn() && waveOf(d) === 0 ? ' <span class="pill kill">' + (STATE.track === 'core' ? '⭐⭐' : 'A') + '</span>' : '') +
           (d.hot ? ' <span class="pill hot">🔥</span>' : '') +
           ((STATE.days[d.id] && STATE.days[d.id].completedAt) ? ' <span class="pill green">✓</span>' : '') + '</span>' +
           bar(p.done, p.total) +
@@ -1316,8 +1357,23 @@
             (STATE.minPriority === o[0]) + '">' + o[1] + '</button>';
         }).join('') + '</div>' +
         '<div class="hint">Сейчас в программе <strong>' + activeItemCount() + '</strong> ' +
-        plural(activeItemCount(), 'вопрос', 'вопроса', 'вопросов') + '.' +
-        (STATE.track === 'core' ? ' Kill-вопросы ⭐⭐ — те, на которых режут: их держат первыми в очереди.' : '') +
+        plural(activeItemCount(), 'вопрос', 'вопроса', 'вопросов') + '.</div></div>';
+
+      var top = STATE.track === 'core' ? '⭐⭐' : 'A';
+      var w1 = DAYS().filter(function (e) { return waveOf(e.day) === 0; }).length;
+      h += '<div class="field" style="margin-bottom:0">' +
+        '<label>Порядок дней</label>' +
+        '<div class="seg" role="group">' +
+        [['1', 'сначала все ' + top], ['0', 'подряд по блокам']].map(function (o) {
+          return '<button type="button" data-act="wave" data-wave="' + o[0] + '" aria-pressed="' +
+            (waveOrderOn() === (o[0] === '1')) + '">' + o[1] + '</button>';
+        }).join('') + '</div>' +
+        '<div class="hint">' + (waveOrderOn()
+          ? 'Первая волна — все ' + top + ' по всем блокам: <strong>' + w1 + '</strong> ' +
+            plural(w1, 'день', 'дня', 'дней') + ', до ' + humanDate(isoAdd(STATE.startDate, w1 - 1)) + '. ' +
+            'Это те вопросы, на которых режут, — они не должны ждать своей очереди до зимы. ' +
+            'Потом вторая волна: остальные вопросы, тем же порядком блоков.'
+          : 'Блоки идут подряд, целиком. ' + top + '-вопросы последних блоков дойдут до вас только к концу программы.') +
         '</div></div>';
     }
     h += '</div>';
@@ -1836,6 +1892,16 @@
       toast('В программе ' + activeItemCount() + ' ' +
         plural(activeItemCount(), 'вопрос', 'вопроса', 'вопросов') + ' · ' +
         DAYS().length + ' ' + plural(DAYS().length, 'день', 'дня', 'дней'));
+    },
+
+    wave: function (el) {
+      var on = el.getAttribute('data-wave') === '1';
+      if (on === waveOrderOn()) return;
+      STATE.waveOrder = on;
+      V.dayId = null; V.openWeeks = {}; V.random = null;
+      save(); render();
+      toast(on ? 'Сначала все вопросы высшего приоритета, потом остальные'
+               : 'Дни идут подряд, блок за блоком');
     },
 
     norm: function (el) {

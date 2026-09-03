@@ -165,6 +165,7 @@ h1.page { font-size: 19px; margin: 0 0 4px; font-weight: 660; letter-spacing: -.
 .pill.hot { color: var(--hot); border-color: var(--hot); background: transparent; }
 .pill.red { color: var(--red); border-color: var(--red); }
 .pill.green { color: var(--green); border-color: var(--green); }
+.pill.kill { color: var(--yellow); border-color: var(--yellow); background: transparent; }
 
 /* прогресс */
 .bar { height: 6px; background: var(--bg-sunk); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
